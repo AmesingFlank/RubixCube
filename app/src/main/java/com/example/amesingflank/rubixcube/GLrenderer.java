@@ -36,6 +36,7 @@ public class GLrenderer implements GLSurfaceView.Renderer{
     public GLrenderer(){
         super();
         //setWH(1440,2308);
+
     }
 
 
@@ -62,6 +63,7 @@ public class GLrenderer implements GLSurfaceView.Renderer{
 
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+        GLES20.glClearColor(0.55f,0.68f,1f,0f);
 
         if(firstdrawflag==false){
             glrc.firstdraw(mMVPMatrix);
@@ -114,32 +116,39 @@ public class GLrenderer implements GLSurfaceView.Renderer{
         if(onCoherent){
             if(SolutionIndex==Solution.size()){
                 SolutionIndex=0;
-
-                Solution=new LinkedList<int[]>();
+                Solution=new LinkedList<Move>();
                 onCoherent=false;
                 hasSolution=false;
+                ss.msg="Finished";
+                ss.postInvalidate();
             }
             else {
-                int[] thisStep=Solution.get(SolutionIndex);
+                int[] thisStep=Solution.get(SolutionIndex).action;
                 if(!Paused)
                     setRotation(thisStep[0],thisStep[1],thisStep[2]);
+                ss.msg=Solution.get(SolutionIndex).message;
                 SolutionIndex++;
                 if(SolutionIndex!=Solution.size()){
                     ss.steps++;
                     ss.postInvalidate();
                 }
 
-
             }
         }
     }
     public boolean onCoherent=false;
     public boolean Paused=false;
-    public LinkedList<int[]> Solution=new LinkedList<int[]>();
+    public LinkedList<Move> Solution=new LinkedList<Move>();
     public int SolutionIndex=0;
     public boolean hasSolution=false;
     public void getSolution(){
         Solution=glrc.Jcube.getSolution();
+        if (Solution.size()!=0){
+            hasSolution=true;
+        }
+    }
+    public void getIntelliSolution(){
+        Solution=glrc.Jcube.getIntelliSolution();
         if (Solution.size()!=0){
             hasSolution=true;
         }
@@ -151,9 +160,10 @@ public class GLrenderer implements GLSurfaceView.Renderer{
 
 
 
+    public final float initialAngle=30;
     public boolean firstdrawflag=false;
-    public float xangle=30;
-    public float yangle=30;
+    public float xangle=initialAngle;
+    public float yangle=initialAngle;
 
     public void set_xyangle(float xin,float yin){
 
@@ -340,15 +350,15 @@ public class GLrenderer implements GLSurfaceView.Renderer{
     }
     public static int comparePos(float uv){
         float ratio =1/uv;
-        if(ratio>3.1){
+        if(ratio>3){
             return 0;
         }
         else {
-            if(ratio<2.9 && ratio>1.6){
+            if(ratio<3 && ratio>1.5){
                 return 1;
             }
             else {
-                if(ratio<1.4)
+                if(ratio<1.5)
                     return 2;
                 else
                     return 4;
@@ -357,15 +367,15 @@ public class GLrenderer implements GLSurfaceView.Renderer{
     }
     public static int compareNeg(float uv){
         float ratio =1/uv;
-        if(ratio>3.1){
+        if(ratio>3){
             return 2;
         }
         else {
-            if(ratio<2.9 && ratio>1.6){
+            if(ratio<5 && ratio>1.5){
                 return 1;
             }
             else {
-                if(ratio<1.4)
+                if(ratio<1.5)
                     return 0;
                 else
                     return 4;

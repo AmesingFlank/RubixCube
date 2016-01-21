@@ -1,7 +1,11 @@
 package com.example.amesingflank.rubixcube;
 
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Message;
 import android.os.SystemClock;
@@ -11,6 +15,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Layout;
 import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -20,11 +26,14 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.LinkedList;
 import java.util.logging.Handler;
+
+import javax.microedition.khronos.opengles.GL10;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,13 +43,16 @@ public class MainActivity extends AppCompatActivity {
     LinearLayout LL;
     LinearLayout.LayoutParams wrap = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,LinearLayout.LayoutParams.WRAP_CONTENT);
     LinearLayout.LayoutParams match = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.MATCH_PARENT);
-    public EditText RotationSpeedET;
-    public float temp;
+    public SeekBar seekBar;
+
+
 
     DisplayMetrics dm;
     public int screenx=1440;
     public int screeny=2560;
     StepsShower ss;
+    boolean inSettings=false;
+    boolean inAbout=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
 
 
         LL=(LinearLayout)findViewById(R.id.LL);
@@ -58,8 +71,7 @@ public class MainActivity extends AppCompatActivity {
         getWindowManager().getDefaultDisplay().getMetrics(dm);
         screenx=dm.widthPixels;
         screeny=dm.heightPixels;
-
-
+        RSC=0.15f;
       /*  FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -68,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });*/
+
         restart();
 
 
@@ -81,11 +94,14 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         menu.removeItem(0);
         menu.add(0, 2, 0, "Restart");
-        menu.add(0, 3, 0, "Random Rotate");
+        menu.add(0, 3, 0, "Disarrange");
         menu.add(0, 4, 0, "Next Step");
-        menu.add(0, 5, 0, "Solve");
-        menu.add(0, 6, 0, "Pause");
-        menu.add(0, 7, 0, "Continue");
+        menu.add(0, 5, 0, "Previous Step");
+        menu.add(0, 6, 0, "Solve");
+        menu.add(0, 7, 0, "Pause");
+        menu.add(0, 8, 0, "Continue");
+        menu.add(0, 9, 0, "About");
+        menu.add(0,10,0,"Intelli Solve");
 
 
 
@@ -110,14 +126,24 @@ public class MainActivity extends AppCompatActivity {
                 NextStep();
                 break;
             case 5:
-                solve();
+                PreviousStep();
                 break;
             case 6:
-                Pause();
+                solve();
                 break;
             case 7:
+                Pause();
+                break;
+            case 8:
                 Continue();
                 break;
+            case 9:
+                enterAbout();
+                break;
+            case 10:
+                intelliSolve();
+                break;
+
         }
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
@@ -158,6 +184,8 @@ public class MainActivity extends AppCompatActivity {
         if(!firstTime){
             ss.setVisibility(View.INVISIBLE);
             ss.steps=0;
+            ss.msg="";
+            ss.invalidate();
         }
         firstTime=true;
 
@@ -166,10 +194,19 @@ public class MainActivity extends AppCompatActivity {
     public void RandomeRotate(){
 
         if(!g.mRenderer.onCoherent && !g.mRenderer.isRotating){
-            g.mRenderer.glrc.Jcube.ruinSolver();
+
             g.mRenderer.glrc.RandomRotate();
             if(!firstTime)
                 ss.setVisibility(View.INVISIBLE);
+
+            g.mRenderer.Solution=new LinkedList<Move>();
+            g.mRenderer.SolutionIndex=0;
+            g.mRenderer.hasSolution=false;
+            if(g.mRenderer.ss!=null){
+                g.mRenderer.ss.setVisibility(View.INVISIBLE);
+                g.mRenderer.ss.steps=0;
+                g.mRenderer.ss.msg="";
+            }
         }
     }
 
@@ -190,8 +227,9 @@ public class MainActivity extends AppCompatActivity {
             g.mRenderer.timeflag = false;
             g.mRenderer.isRotating = false;
             g.mRenderer.time0 = SystemClock.currentThreadTimeMillis();
-            int[] ans = g.mRenderer.Solution.get(g.mRenderer.SolutionIndex);
+            int[] ans = g.mRenderer.Solution.get(g.mRenderer.SolutionIndex).action;
             g.mRenderer.setRotation(ans[0], ans[1], ans[2]);
+            ss.msg=g.mRenderer.Solution.get(g.mRenderer.SolutionIndex).message;
             g.mRenderer.SolutionIndex++;
 
             ss.steps++;
@@ -202,19 +240,33 @@ public class MainActivity extends AppCompatActivity {
                 g.mRenderer.hasSolution=false;
                 g.mRenderer.SolutionIndex=0;
                 ss.steps=0;
-                g.mRenderer.Solution=new LinkedList<int[]>();
+                g.mRenderer.Solution=new LinkedList<Move>();
             }
 
 
         }
 
+    }
 
+    public void PreviousStep(){
+        if(g.mRenderer.hasSolution && g.mRenderer.SolutionIndex!=0 && !g.mRenderer.onCoherent){
+            g.mRenderer.timeflag = false;
+            g.mRenderer.isRotating = false;
+            g.mRenderer.time0 = SystemClock.currentThreadTimeMillis();
+            int[] ans = g.mRenderer.Solution.get(g.mRenderer.SolutionIndex-1).action;
+            g.mRenderer.setRotation(ans[0], ans[1], -ans[2]);
+            ss.msg="Reversing Move";
+            g.mRenderer.SolutionIndex--;
 
+            ss.steps--;
+            ss.setVisibility(View.VISIBLE);
+            ss.invalidate();
+        }
     }
     public void solve(){
         firstTime=false;
         if(!g.mRenderer.hasSolution){
-            g.mRenderer.getSolution();
+             g.mRenderer.getSolution();
             ss=new StepsShower(this,screenx,screeny);
             ss.setVisibility(View.INVISIBLE);
             if(g.mRenderer.Solution.size()!=0 && g.mRenderer.SolutionIndex!=g.mRenderer.Solution.size()){
@@ -243,10 +295,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     public void enterSettings(){
+
+
         setContentView(R.layout.settingslayout);
 
-        RotationSpeedET=(EditText)findViewById(R.id.RotationSpeedET);
-        RotationSpeedET.setText(String.valueOf(90/(RSC*1000)));
+
+        seekBar=(SeekBar)findViewById(R.id.seekBar);
+        int progress=200-(int)(9.0/RSC);
+        seekBar.setProgress(progress);
+
+        inSettings=true;
+
 
         Button ConfirmBTN=(Button)findViewById(R.id.ConfirmBTN);
         ConfirmBTN.setOnClickListener(new Button.OnClickListener() {
@@ -257,14 +316,83 @@ public class MainActivity extends AppCompatActivity {
                 setContentView(R.layout.activity_main);
                 Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
                 setSupportActionBar(toolbar);
-                temp=Float.valueOf(RotationSpeedET.getText().toString());
+                int p=200-seekBar.getProgress();
+                RSC=9/(float)p;
 
-                RSC=90/(temp*1000);
                 restart();
+                inSettings=false;
+
+            }
+        });
+
+        Button CclBTN=(Button)findViewById(R.id.cclbtn);
+        CclBTN.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //g.mRenderer.RotationSpeedCoefficient = 90 / (1000 * temp);
+
+                setContentView(R.layout.activity_main);
+                Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+                setSupportActionBar(toolbar);
+
+                restart();
+                inSettings=false;
+
             }
         });
 
     }
+
+    public void enterAbout(){
+        setContentView(R.layout.aboutlayout);
+        inAbout=true;
+        Button AboutBTN=(Button)findViewById(R.id.AboutBTN);
+        AboutBTN.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //g.mRenderer.RotationSpeedCoefficient = 90 / (1000 * temp);
+
+                setContentView(R.layout.activity_main);
+                Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+                setSupportActionBar(toolbar);
+                restart();
+                inAbout=false;
+            }
+        });
+    }
+
+
+    public void intelliSolve(){
+    /*    int n=10000;
+
+        Cube[] css=new Cube[n];
+        long aa=SystemClock.currentThreadTimeMillis();
+        for (int i = 0; i <n ; i++) {
+            css[i]=g.mRenderer.glrc.Jcube.clone();
+          //  Log.w("Logged:   ",String.valueOf(i));
+        }
+        long bb=SystemClock.currentThreadTimeMillis();
+
+        Log.w("Time: ",String.valueOf(bb-aa));*/
+
+
+       firstTime=false;
+        if(!g.mRenderer.hasSolution){
+            g.mRenderer.getIntelliSolution();
+            ss=new StepsShower(this,screenx,screeny);
+            ss.setVisibility(View.INVISIBLE);
+            if(g.mRenderer.Solution.size()!=0 && g.mRenderer.SolutionIndex!=g.mRenderer.Solution.size()){
+                ss.setVisibility(View.VISIBLE);
+            }
+            addContentView(ss, wrap);
+            g.mRenderer.setStpesShower(ss);
+        }
+        if (!g.mRenderer.isRotating && !g.mRenderer.onCoherent) {
+            Continue();
+
+        }
+    }
+
 
 
 
@@ -279,4 +407,61 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         g.mRenderer.clear_Rotation();
     }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event)
+    {
+        if (keyCode == KeyEvent.KEYCODE_BACK )
+        {
+            if(inSettings){
+                setContentView(R.layout.activity_main);
+                Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+                setSupportActionBar(toolbar);
+                int p=seekBar.getProgress();
+
+                RSC=9/(float)p;
+                restart();
+                inSettings=false;
+            }
+            else {
+                if(inAbout){
+                    setContentView(R.layout.activity_main);
+                    Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+                    setSupportActionBar(toolbar);
+                    restart();
+                    inAbout=false;
+                }
+                else {
+                    //System.exit(0);
+                    finish();
+                }
+            }
+        }
+
+        return false;
+
+    }
+
+
+    private boolean checkCameraHardware(Context context) {
+        if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)){
+            // this device has a camera
+            return true;
+        } else {
+            // no camera on this device
+            return false;
+        }
+    }
+
+    public static Camera getCameraInstance(){
+        Camera c = null;
+        try {
+            c = Camera.open(); // attempt to get a Camera instance
+        }
+        catch (Exception e){
+            // Camera is not available (in use or does not exist)
+        }
+        return c; // returns null if camera is unavailable
+    }
+
 }

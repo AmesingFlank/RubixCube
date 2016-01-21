@@ -7,7 +7,7 @@ import java.util.Set;
 /**
  * Created by lbj on 2015/12/26.
  */
-public class Cube implements Serializable{
+public class Cube implements Serializable,Cloneable{
     public final int Xaxis = 0;
     public final int Yaxis = 1;
     public final int Zaxis = 2;
@@ -54,7 +54,7 @@ public class Cube implements Serializable{
         for(int i=0;i<3;i++){
             layers[Zaxis][i]=new layer(new int[][]{yellow,red,white,orange},this,Zaxis,i);
         }
-        solver=new Solver(this);
+
 
     }
     public void rotatePos(int ain,int iin){
@@ -64,28 +64,137 @@ public class Cube implements Serializable{
         layers[ain][iin].rotateNeg();
     }
 
-    public Solver solver;
 
 
-    public LinkedList<int[]> getSolution(){
-        Cube temp=null;
-        try {
+
+    public LinkedList<Move> getSolution(){
+        Cube temp=this.clone();
+       /* try {
             temp=(Cube)ObjectCloner.deepCopy(this);
         } catch (Exception e) {
             e.printStackTrace();
-        }
-        OneTimeSolver ots=new OneTimeSolver(temp);
+        }*/
+        Solver ots=new Solver(temp);
         return ots.getSolution();
     }
 
-    public void ruinSolver(){
-        solver=new Solver(this);
+    public LinkedList<Move> getIntelliSolution(){
+        Cube temp=clone();
+        IntelliSolver is=new IntelliSolver(temp );
+        return is.getSolution2();
     }
+
+
+    @Override
+    public boolean equals(Object o){
+        if(o.hashCode()==hashCode()){
+            return true;
+        }
+        else
+            return false;
+    }
+
+    @Override
+    public int hashCode(){
+        int[] HashofFaces=getHashofFaces();
+        int ans=HashofFaces[0];
+        for (int i = 1; i <6 ; i++) {
+            ans^=HashofFaces[i];
+        }
+        return ans;
+    }
+
+    public int[] getHashofFaces(){
+        int[] ans=new int[6];
+        for (int i = 0; i <6 ; i++) {
+            ans[i]=0;
+        }
+        for (int i = 0; i <6; i++) {
+            int index=8;
+            switch (i){
+                case 0:
+                    index=8;
+                    for (int l = 0; l <3 ; l++) {
+                        for (int c = 0; c <3 ; c++) {
+                            ans[i]+=layers[Xaxis][l].rows[0].cells[c].c.color*(Math.pow(10,index));
+                            index--;
+                        }
+                    }
+                    break;
+                case 1:
+                    index=8;
+                    for (int l = 0; l <3 ; l++) {
+                        for (int c = 0; c <3 ; c++) {
+                            ans[i]+=layers[Xaxis][l].rows[2].cells[c].c.color*(Math.pow(10,index));
+                            index--;
+                        }
+                    }
+                    break;
+                case 2:
+                    index=8;
+                    for (int l = 0; l <3 ; l++) {
+                        for (int c = 0; c <3 ; c++) {
+                            ans[i]+=layers[Xaxis][l].rows[3].cells[c].c.color*(Math.pow(10,index));
+                            index--;
+                        }
+                    }
+                    break;
+                case 3:
+                    index=8;
+                    for (int l = 0; l <3 ; l++) {
+                        for (int c = 0; c <3 ; c++) {
+                            ans[i]+=layers[Xaxis][l].rows[1].cells[c].c.color*(Math.pow(10,index));
+                            index--;
+                        }
+                    }
+                    break;
+
+                case 4:
+                    index=8;
+                    for (int l = 0; l <3 ; l++) {
+                        for (int c = 0; c <3 ; c++) {
+                            ans[i]+=layers[Zaxis][l].rows[0].cells[c].c.color*(Math.pow(10,index));
+                            index--;
+                        }
+                    }
+                    break;
+                case 5:
+                    index=8;
+                    for (int l = 0; l <3 ; l++) {
+                        for (int c = 0; c <3 ; c++) {
+                            ans[i]+=layers[Zaxis][l].rows[2].cells[c].c.color*(Math.pow(10,index));
+                            index--;
+                        }
+                    }
+                    break;
+            }
+        }
+        return ans;
+    }
+
+    public Cube clone(){
+        Cube clone=new Cube();
+        try {
+            clone=(Cube)super.clone();
+        }
+        catch (CloneNotSupportedException e){
+            e.printStackTrace();
+        }
+        clone.layers=new layer[3][3];
+        for (int l = 0; l < 3; l++) {
+            for (int i = 0; i < 3; i++) {
+                clone.layers[l][i]=layers[l][i].clone(clone);
+                clone.layers[l][i].cube=clone;
+            }
+        }
+        return clone;
+    }
+
 
 }
 
 
-class layer implements Serializable{
+class layer implements Serializable,Cloneable{
     public row[] rows=new row[4];
     public Cube cube;
     public int axis;
@@ -97,7 +206,7 @@ class layer implements Serializable{
     //i[4][3]
     public layer(int[][] i,Cube ci,int ai,int ii){
         for (int j = 0; j < 4; j++) {
-            rows[j]=new row(i[j],this,j);
+            rows[j]=new row(i[j],j);
         }
         cube=ci;
         axis=ai;
@@ -370,18 +479,32 @@ class layer implements Serializable{
             }
         }
     }
+
+    public layer clone(Cube cin){
+        layer clone=null;
+        try {
+            clone=(layer)super.clone();
+        }
+        catch (CloneNotSupportedException e){
+            e.printStackTrace();
+        }
+        clone.rows=new row[4];
+        for (int i = 0; i < 4; i++) {
+            clone.rows[i]=rows[i].clone();
+            clone.cube=cin;
+        }
+        return clone;
+    }
+
 }
 
-class row implements Serializable{
+class row implements Serializable,Cloneable{
     public cell[] cells=new cell[3];
-    public layer l;
     int index;
-    public  row (int[] i,layer li,int ii){
+    public  row (int[] i,int ii){
         for (int j = 0; j < 3; j++) {
-            //System.out.println(i[j]);
             cells[j]=new cell(i[j]);
         }
-        l=li;
         index=ii;
     }
     public row getinverserow(){
@@ -390,9 +513,9 @@ class row implements Serializable{
         out.cells[2]=this.cells[0];
         return out;
     }
+    @Override
     public row clone(){
-        row out=this;
-        out=new row(new int[]{cells[0].c.color,cells[1].c.color,cells[2].c.color},l,index);
+        row out=new row(new int[]{cells[0].c.color,cells[1].c.color,cells[2].c.color}.clone(),index);
         return out;
     }
     public boolean ReadyforFinal(){
@@ -417,13 +540,25 @@ class row implements Serializable{
     }
 }
 
-class cell implements Serializable{
+class cell implements Serializable,Cloneable{
     public color c;
     public cell(int i){
         c=new color(i);
     }
+    @Override
+    public Object clone(){
+        cell clone=null;
+        try {
+            clone=(cell)super.clone();
+        }
+        catch (CloneNotSupportedException e){
+            e.printStackTrace();
+        }
+        clone.c=(color)c.clone();
+        return clone;
+    }
 }
-class color implements Serializable{
+class color implements Serializable,Cloneable{
     public int color;
     public static final int orange=0;
     public static final int red=1;
@@ -454,5 +589,16 @@ class color implements Serializable{
                 nameofcolor="white";
                 break;
         }
+    }
+    @Override
+    public Object clone(){
+        color clone=null;
+        try {
+            clone=(color)super.clone();
+        }
+        catch (CloneNotSupportedException e){
+            e.printStackTrace();
+        }
+        return clone;
     }
 }

@@ -5,11 +5,13 @@ import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
 import android.view.MotionEvent;
 
+import java.util.LinkedList;
+
 /**
  * Created by lbj on 2015/11/24.
  */
 public class glsv extends GLSurfaceView {
-    final GLrenderer mRenderer;
+    public  GLrenderer mRenderer;
 
     public glsv(Context context){
 
@@ -20,6 +22,7 @@ public class glsv extends GLSurfaceView {
         mRenderer = new GLrenderer();
 
         setRenderer(mRenderer);
+        setPreserveEGLContextOnPause(true);
     }
 
 
@@ -222,7 +225,16 @@ public class glsv extends GLSurfaceView {
                                 }
                                 break ;
                         }
-                        mRenderer.glrc.Jcube.ruinSolver();
+
+                        mRenderer.Solution=new LinkedList<Move>();
+                        mRenderer.SolutionIndex=0;
+                        mRenderer.hasSolution=false;
+                        if(mRenderer.ss!=null){
+                            mRenderer.ss.setVisibility(INVISIBLE);
+                            mRenderer.ss.steps=0;
+                            mRenderer.ss.msg="";
+                        }
+
                     }
 
 

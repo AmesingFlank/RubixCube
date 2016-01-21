@@ -1,12 +1,34 @@
 package com.example.amesingflank.rubixcube;
 
+import android.util.Log;
+
 import java.io.Serializable;
+import java.util.LinkedList;
 import java.util.Vector;
 
 /**
  * Created by AmesingFlank on 15/12/28.
  */
-public class Solver implements Serializable{
+public class Solver implements Serializable,Cloneable{
+
+    public LinkedList<Move> getSolution(){
+        LinkedList<Move> Solution=new LinkedList<Move>();
+        Move step=nextMove();
+        while (step.action[0]!=999){
+            Log.w(String.valueOf("        "+step.action[0])+"   "+String.valueOf(step.action[1])+"   "+String.valueOf(step.action[2])+"   ",step.message);
+            Solution.add(step);
+            if(step.action[2]==1){
+                Jcube.rotatePos(step.action[0],step.action[1]);
+            }
+            else {
+                if(step.action[2]==-1){
+                    Jcube.rotateNeg(step.action[0],step.action[1]);
+                }
+            }
+            step=nextMove();
+        }
+        return Solution;
+    }
 
     public final int Xaxis = 0;
     public final int Yaxis = 1;
@@ -25,10 +47,10 @@ public class Solver implements Serializable{
 
     private int routineIndex=1;
     private boolean onRoutine=false;
-    private int[][] currentRoutine;
+    private Move[] currentRoutine;
 
     boolean haveNextSingleInstruction=false;
-    int[] nextSingleInstruction;
+    Move nextSingleInstruction;
 
     boolean finishedWhiteCrossWithYellowCenter=false;
     boolean finished1stLayer=false;
@@ -38,16 +60,26 @@ public class Solver implements Serializable{
     boolean readyforFinal=false;
     boolean finishedEverything;
 
+    public void setNextSingleInstruction(Move m){
+        nextSingleInstruction=m;
+        haveNextSingleInstruction=true;
+    }
+    public void setCurrentRoutine(Move[] m){
+        currentRoutine=m;
+        onRoutine=true;
+    }
 
-    public int[] nextMove(){
+
+    public Move nextMove(){
         if (finishedEverything || checkFinished()){
-            return new int[]{999,999,999};
+            return new Move(new int[]{999,999,999},"");
+
         }
 
         if(haveNextSingleInstruction){
             haveNextSingleInstruction=false;
-            int[] NSItemp=nextSingleInstruction.clone();
-            nextSingleInstruction=new int[3];
+            Move NSItemp=nextSingleInstruction.clone();
+            nextSingleInstruction=new Move(new int[]{6,6,6},"");
             return NSItemp;
         }
         if(onRoutine){
@@ -87,9 +119,8 @@ public class Solver implements Serializable{
                         Jcube.layers[Yaxis][2].rows[1].cells[1].c.color!=whiteRepresentative ||
                         Jcube.layers[Yaxis][1].rows[1].cells[0].c.color!=whiteRepresentative ||
                         Jcube.layers[Yaxis][1].rows[1].cells[2].c.color!=whiteRepresentative)){
-                    this.currentRoutine=ReverseWholeCubeByZ();
-                    onRoutine=true;
-                    return new int[]{2,0,1};
+                    setCurrentRoutine(ReverseWholeCubeByZ());
+                    return currentRoutine[0];
                 }
                 if(Jcube.layers[Yaxis][0].rows[1].cells[0].c.color!=whiteRepresentative||
                         Jcube.layers[Yaxis][0].rows[1].cells[2].c.color!=whiteRepresentative||
@@ -143,9 +174,8 @@ public class Solver implements Serializable{
                                 }
                             }
                             else {
-                                haveNextSingleInstruction=true;
-                                nextSingleInstruction=new int[]{0,1,1};
-                                return new int[]{0,0,1};
+                                setNextSingleInstruction(new Move(new int[]{0,1,1},"Assembling middle layer"));
+                                return new Move(new int[]{0,0,1},"Assembling middle layer");
                             }
                         }
                         else {
@@ -156,23 +186,21 @@ public class Solver implements Serializable{
                                     (Jcube.layers[Yaxis][2].rows[1].cells[1].c.color==yellowRepresentative ||Jcube.layers[Xaxis][2].rows[2].cells[1].c.color==yellowRepresentative ) ){
                                 if(Jcube.layers[Xaxis][1].rows[0].cells[0].c.color!=Jcube.layers[Xaxis][1].rows[0].cells[1].c.color ||
                                         Jcube.layers[Xaxis][1].rows[3].cells[1].c.color!=Jcube.layers[Xaxis][1].rows[3].cells[2].c.color){
-                                    onRoutine=true;
-                                    currentRoutine=SecondLayer0();
+                                    setCurrentRoutine(SecondLayer0());
                                     return currentRoutine[0];
                                 }
                                 if(Jcube.layers[Xaxis][1].rows[0].cells[2].c.color!=Jcube.layers[Xaxis][1].rows[0].cells[1].c.color &&
                                         Jcube.layers[Xaxis][1].rows[1].cells[1].c.color!=Jcube.layers[Xaxis][1].rows[1].cells[0].c.color){
-                                    onRoutine=true;
-                                    currentRoutine=SecondLayer1();
+                                    setCurrentRoutine(SecondLayer1());
                                     return currentRoutine[0];
                                 }
-                                haveNextSingleInstruction=true;
-                                nextSingleInstruction=new int[]{0,1,1};
-                                return new int[]{0,0,1};
+
+                                setNextSingleInstruction(new Move(new int[]{0,1,1},"Assembling middle layer"));
+                                return new Move(new int[]{0,0,1},"Assembling middle layer");
 
                             }
                             else {
-                                return new int[]{0,2,1};
+                                return new Move(new int[]{0,2,1},"Assembling middle layer");
                             }
 
                         }
@@ -199,7 +227,7 @@ public class Solver implements Serializable{
                             return currentRoutine[0];
                         }
                         else {
-                            return new int[]{0,2,1};
+                            return new Move(new int[]{0,2,1},"Assembling yellow cross");
                         }
                     }
                     if(finishedYellowCross){
@@ -249,7 +277,7 @@ public class Solver implements Serializable{
                                     return getFinal();
                                 }
                                 if (finishedEverything){
-                                    return new int[]{999,999,999};
+                                    return new Move(new int[]{999,999,999},"Finished");
                                 }
 
                             }
@@ -263,52 +291,59 @@ public class Solver implements Serializable{
 
         }
 
-        return new int[]{4,4,4};
+        return new Move(new int[]{4,4,4},"");
 
 
     }
-    public int[] MoveYellowCentral(){
+    public Move MoveYellowCentral(){
+        int[] action;
         if (Jcube.layers[Xaxis][1].rows[0].cells[1].c.color==yellowRepresentative){
-            return new int[]{2,1,-1};
+            action= new int[]{2,1,-1};
         }
         else {
             if (Jcube.layers[Xaxis][1].rows[2].cells[1].c.color==yellowRepresentative){
-                return new int[]{2,1,1};
+                action= new int[]{2,1,1};
             }
             else {
                 if(Jcube.layers[Zaxis][1].rows[0].cells[1].c.color==yellowRepresentative){
-                    return new int[]{2,1,1};
+                    action= new int[]{2,1,1};
                 }
                 else {
                     if(Jcube.layers[Yaxis][1].rows[0].cells[1].c.color==yellowRepresentative){
-                        return new int[]{1,1,1};
+                        action= new int[]{1,1,1};
                     }
                     else {
                         if(Jcube.layers[Yaxis][1].rows[2].cells[1].c.color==yellowRepresentative){
-                            return new int[]{1,1,-1};
+                            action= new int[]{1,1,-1};
                         }
                         else {
-                            return new int[]{4,4,4};
+                            action= new int[]{4,4,4};
                         }
                     }
                 }
             }
         }
+        return new Move(action,"Assembling a white cross");
     }
-    public int[] WhiteCrossWithYellowCentral(){
+    public Move WhiteCrossWithYellowCentral(){
+        int[] action=new int[3];
         if(Jcube.layers[Yaxis][0].rows[1].cells[1].c.color==whiteRepresentative){
-            return new int[]{0,2,1};
+            action= new int[]{0,2,1};
+            return new Move(action,"Assembling a white cross");
         }
         else {
             if(Jcube.layers[Xaxis][2].rows[0].cells[1].c.color==whiteRepresentative){
-                return new int[]{1,0,1};
+                action= new int[]{1,0,1};
+                return new Move(action,"Assembling a white cross");
             }
         }
         if(Jcube.layers[Xaxis][1].rows[1].cells[0].c.color==whiteRepresentative){
-            return new int[]{1,0,-1};
+            action= new int[]{1,0,-1};
+            return new Move(action,"Assembling a white cross");
         }
         if(Jcube.layers[Xaxis][1].rows[3].cells[2].c.color==whiteRepresentative){
-            return new int[]{1,0,1};
+            action= new int[]{1,0,1};
+            return new Move(action,"Assembling a white cross");
         }
         boolean X1Flag =false;
         xx:for (int i = 0; i <4 ; i++) {
@@ -319,70 +354,69 @@ public class Solver implements Serializable{
 
         }
         if(X1Flag){
-            return new int[]{0,1,1};
+            action= new int[]{0,1,1};
+            return new Move(action,"Assembling a white cross");
         }
 
         if(Jcube.layers[Xaxis][0].rows[0].cells[1].c.color==whiteRepresentative){
-            return new int[]{1,0,1};
+            action= new int[]{1,0,1};
+            return new Move(action,"Assembling a white cross");
         }
 
         if(Jcube.layers[Yaxis][0].rows[3].cells[1].c.color==whiteRepresentative){
-            return new int[]{1,0,1};
+            action= new int[]{1,0,1};
+            return new Move(action,"Assembling a white cross");
         }
         else {
-            return new int[]{0,0,1};
+            action= new int[]{0,0,1};
+            return new Move(action,"Assembling a white cross");
         }
     }
 
-    public int[] getWhiteCenter(){
+    public Move getWhiteCenter(){
         if(Jcube.layers[Yaxis][0].rows[1].cells[1].c.color!=whiteRepresentative){
-            return new int[]{0,2,1};
+            return new Move(new int[]{0,2,1},"Assembling a white cross");
         }
         if(Jcube.layers[Xaxis][1].rows[0].cells[1].c.color!=Jcube.layers[Xaxis][2].rows[0].cells[1].c.color){
-            haveNextSingleInstruction=true;
-            nextSingleInstruction=new int[]{0,0,1};
-            return new int[]{0,1,1};
+            setNextSingleInstruction(new Move(new int[]{0,0,1},"Assembling a white cross"));
+            return new Move(new int[]{0,1,1},"Assembling a white cross");
         }
-        haveNextSingleInstruction=true;
-        nextSingleInstruction=new int[]{1,0,1};
-        return new int[]{1,0,1};
+
+        setNextSingleInstruction(new Move(new int[]{1,0,1},"Assembling a white cross"));
+        return new Move(new int[]{1,0,1},"Assembling a white cross");
     }
 
-    public int[][] ReverseWholeCubeByZ(){
-        int[][] ans=new int[6][3];
-        ans[0]=new int[]{2,0,1};
-        ans[1]=new int[]{2,0,1};
-        ans[2]=new int[]{2,1,1};
-        ans[3]=new int[]{2,1,1};
-        ans[4]=new int[]{2,2,1};
-        ans[5]=new int[]{2,2,1};
+    public Move[] ReverseWholeCubeByZ(){
+        Move[] ans=new Move[6];
+        ans[0]=new Move(new int[]{2,0,1},"Flipping the cube over");
+        ans[1]=new Move(new int[]{2,0,1},"Flipping the cube over");
+        ans[2]=new Move(new int[]{2,1,1},"Flipping the cube over");
+        ans[3]=new Move(new int[]{2,1,1},"Flipping the cube over");
+        ans[4]=new Move(new int[]{2,2,1},"Flipping the cube over");
+        ans[5]=new Move(new int[]{2,2,1},"Flipping the cube over");
         return ans;
     }
-    public int[] get1stLayer(){
+    public Move get1stLayer(){
         if (Jcube.layers[Xaxis][0].rows[0].cells[0].c.color==whiteRepresentative ){
             if(Jcube.layers[Xaxis][0].rows[3].cells[2].c.color==Jcube.layers[Xaxis][2].rows[3].cells[1].c.color &&
                     Jcube.layers[Zaxis][0].rows[0].cells[0].c.color==Jcube.layers[Xaxis][2].rows[0].cells[1].c.color){
-                currentRoutine=WhiteCorner0();
-                onRoutine=true;
-                return new int[]{1,0,-1};
+                setCurrentRoutine(WhiteCorner0());
+                return currentRoutine[0];
             }
             else {
-                haveNextSingleInstruction=true;
-                nextSingleInstruction=new int[]{0,1,1};
-                return new int[]{0,2,1};
+                setNextSingleInstruction(new Move(new int[]{0,1,1},"Assembling white layer"));
+                return new Move(new int[]{0,2,1},"Assembling white layer");
             }
         }
         if (Jcube.layers[Xaxis][0].rows[3].cells[2].c.color==whiteRepresentative ){
             if(Jcube.layers[Zaxis][0].rows[0].cells[0].c.color==Jcube.layers[Xaxis][2].rows[3].cells[1].c.color &&
                     Jcube.layers[Xaxis][0].rows[0].cells[0].c.color==Jcube.layers[Xaxis][2].rows[0].cells[1].c.color){
-                currentRoutine=WhiteCorner1();
-                onRoutine=true;
-                return new int[]{2,0,1};
+                setCurrentRoutine(WhiteCorner1());
+                return currentRoutine[0];
             }
             else {
-                haveNextSingleInstruction=true;
-                nextSingleInstruction=new int[]{0,1,1};
-                return new int[]{0,2,1};
+                setNextSingleInstruction(new Move(new int[]{0,1,1},"Assembling white layer"));
+                return new Move(new int[]{0,2,1},"Assembling white layer");
             }
         }
         if(Jcube.layers[Zaxis][0].rows[0].cells[0].c.color==whiteRepresentative  ){
@@ -390,34 +424,33 @@ public class Solver implements Serializable{
                             Jcube.layers[Xaxis][2].rows[0].cells[0].c.color== Jcube.layers[Xaxis][2].rows[0].cells[1].c.color&&
                             Jcube.layers[Xaxis][2].rows[3].cells[2].c.color== Jcube.layers[Xaxis][2].rows[3].cells[1].c.color)){
                 if(Jcube.layers[Xaxis][0].rows[0].cells[2].c.color==whiteRepresentative){
-                    return new int[]{0,0,-1};
+                    return new Move(new int[]{0,0,-1},"Assembling white layer");
                 }
-                currentRoutine=MoveBottomWhite();
-                onRoutine=true;
-                return new int[]{2,0,1};
+                if(Jcube.layers[Xaxis][2].rows[0].cells[0].c.color==whiteRepresentative){
+                    setCurrentRoutine(MoveBottomWhite2());
+                    return currentRoutine[0];
+                }
+                setCurrentRoutine(MoveBottomWhite());
+                return currentRoutine[0];
             }
             else {
-                haveNextSingleInstruction=true;
-                nextSingleInstruction=new int[]{0,1,1};
-                return new int[]{0,2,1};
+                setNextSingleInstruction(new Move(new int[]{0,1,1},"Assembling white layer"));
+                return new Move(new int[]{0,2,1},"Assembling white layer");
             }
         }
         if(Jcube.layers[Xaxis][2].rows[0].cells[0].c.color==whiteRepresentative  ){
-            currentRoutine=WhiteCorner0();
-            onRoutine=true;
-            return new int[]{1,0,-1};
+            setCurrentRoutine(WhiteCorner0());
+            return currentRoutine[0];
         }
         if(Jcube.layers[Xaxis][2].rows[3].cells[2].c.color==whiteRepresentative  ){
-            currentRoutine=WhiteCorner1();
-            onRoutine=true;
-            return new int[]{2,0,1};
+            setCurrentRoutine(WhiteCorner1());
+            return currentRoutine[0];
         }
         if(Jcube.layers[Zaxis][0].rows[2].cells[2].c.color==whiteRepresentative &&
                 !(Jcube.layers[Xaxis][2].rows[0].cells[0].c.color== Jcube.layers[Xaxis][2].rows[0].cells[1].c.color&&
                 Jcube.layers[Xaxis][2].rows[3].cells[2].c.color== Jcube.layers[Xaxis][2].rows[3].cells[1].c.color)){
-            currentRoutine=WhiteCorner1();
-            onRoutine=true;
-            return new int[]{2,0,1};
+            setCurrentRoutine(WhiteCorner1());
+            return currentRoutine[0];
         }
         if (Jcube.layers[Xaxis][0].rows[0].cells[2].c.color==whiteRepresentative ||
                 Jcube.layers[Xaxis][0].rows[1].cells[0].c.color==whiteRepresentative ||
@@ -430,98 +463,107 @@ public class Solver implements Serializable{
                 Jcube.layers[Yaxis][0].rows[3].cells[0].c.color==whiteRepresentative ||
                 Jcube.layers[Yaxis][2].rows[3].cells[2].c.color==whiteRepresentative ||
                 Jcube.layers[Yaxis][2].rows[3].cells[0].c.color==whiteRepresentative ){
-            return new int[]{0,0,1};
+            return new Move(new int[]{0,0,1},"Assembling white layer");
         }
 
         else {
-            haveNextSingleInstruction=true;
-            nextSingleInstruction=new int[]{0,1,1};
-            return new int[]{0,2,1};
+            setNextSingleInstruction(new Move(new int[]{0,1,1},"Assembling white layer"));
+            return new Move(new int[]{0,2,1},"Assembling white layer");
         }
 
     }
-    public int[][] WhiteCorner0(){
-        int[][] ans=new int[3][3];
-        ans[0]=new int[]{1,0,-1};
-        ans[1]=new int[]{0,0,-1};
-        ans[2]=new int[]{1,0,1};
+    public Move[] WhiteCorner0(){
+        Move[] ans=new Move[3];
+        ans[0]=new Move(new int[]{1,0,-1},"Assembling white layer");
+        ans[1]=new Move(new int[]{0,0,-1},"Assembling white layer");
+        ans[2]=new Move(new int[]{1,0,1},"Assembling white layer");
         return ans;
     }
-    public int[][] WhiteCorner1(){
-        int[][] ans=new int[3][3];
-        ans[0]=new int[]{2,0,1};
-        ans[1]=new int[]{0,0,1};
-        ans[2]=new int[]{2,0,-1};
+    public Move[] WhiteCorner1(){
+        Move[] ans=new Move[3];
+        ans[0]=new Move(new int[]{2,0,1},"Assembling white layer");
+        ans[1]=new Move(new int[]{0,0,1},"Assembling white layer");
+        ans[2]=new Move(new int[]{2,0,-1},"Assembling white layer");
         return ans;
     }
-    public int[][] MoveBottomWhite(){
-        int[][] ans=new int[3][3];
-        ans[0]=new int[]{2,0,1};
-        ans[1]=new int[]{0,0,-1};
-        ans[2]=new int[]{2,0,-1};
+    public Move[] MoveBottomWhite(){
+        Move[] ans=new Move[3];
+        ans[0]=new Move(new int[]{2,0,1},"Assembling white layer");
+        ans[1]=new Move(new int[]{0,0,-1},"Assembling white layer");
+        ans[2]=new Move(new int[]{2,0,-1},"Assembling white layer");
         return ans;
     }
-    public int[][] SecondLayer0(){
-        int[][] ans=new int[8][3];
-        ans[0]=new int[]{0,2,1};
-        ans[1]=new int[]{2,0,-1};
-        ans[2]=new int[]{0,2,-1};
-        ans[3]=new int[]{2,0,1};
-        ans[4]=new int[]{0,2,-1};
-        ans[5]=new int[]{1,0,1};
-        ans[6]=new int[]{0,2,1};
-        ans[7]=new int[]{1,0,-1};
+    public Move[] MoveBottomWhite2(){
+        Move[] ans=new Move[3];
+        ans[0]=new Move(new int[]{2,0,1},"Assembling white layer");
+        ans[1]=new Move(new int[]{0,0,1},"Assembling white layer");
+        ans[2]=new Move(new int[]{2,0,-1},"Assembling white layer");
         return ans;
     }
-    public int[][] SecondLayer1(){
-        int[][] ans=new int[8][3];
-        ans[0]=new int[]{0,2,-1};
-        ans[1]=new int[]{2,2,-1};
-        ans[2]=new int[]{0,2,1};
-        ans[3]=new int[]{2,2,1};
-        ans[4]=new int[]{0,2,1};
-        ans[5]=new int[]{1,0,-1};
-        ans[6]=new int[]{0,2,-1};
-        ans[7]=new int[]{1,0,1};
+
+    public Move[] SecondLayer0(){
+        Move[] ans=new Move[8];
+        ans[0]=new Move(new int[]{0,2,1},"Assembling middle layer");
+        ans[1]=new Move(new int[]{2,0,-1},"Assembling middle layer");
+        ans[2]=new Move(new int[]{0,2,-1},"Assembling middle layer");
+        ans[3]=new Move(new int[]{2,0,1},"Assembling middle layer");
+        ans[4]=new Move(new int[]{0,2,-1},"Assembling middle layer");
+        ans[5]=new Move(new int[]{1,0,1},"Assembling middle layer");
+        ans[6]=new Move(new int[]{0,2,1},"Assembling middle layer");
+        ans[7]=new Move(new int[]{1,0,-1},"Assembling middle layer");
         return ans;
     }
-    public int[][] YellowCrossRoutine(){
-        int[][] ans=new int[6][3];
-        ans[0]=new int[]{2,0,1};
-        ans[1]=new int[]{1,0,1};
-        ans[2]=new int[]{0,2,-1};
-        ans[3]=new int[]{1,0,-1};
-        ans[4]=new int[]{0,2,1};
-        ans[5]=new int[]{2,0,-1};
+    public Move[] SecondLayer1(){
+        Move[] ans=new Move[8];
+        ans[0]=new Move(new int[]{0,2,-1},"Assembling middle layer");
+        ans[1]=new Move(new int[]{2,2,-1},"Assembling middle layer");
+        ans[2]=new Move(new int[]{0,2,1},"Assembling middle layer");
+        ans[3]=new Move(new int[]{2,2,1},"Assembling middle layer");
+        ans[4]=new Move(new int[]{0,2,1},"Assembling middle layer");
+        ans[5]=new Move(new int[]{1,0,-1},"Assembling middle layer");
+        ans[6]=new Move(new int[]{0,2,-1},"Assembling middle layer");
+        ans[7]=new Move(new int[]{1,0,1},"Assembling middle layer");
         return ans;
     }
-    public int[][] LittleFish1(){
-        int[][] ans=new int[9][3];
-        ans[0]=new int[]{2,2,1};
-        ans[1]=new int[]{0,2,1};
-        ans[2]=new int[]{2,2,-1};
-        ans[3]=new int[]{0,2,1};
-        ans[4]=new int[]{2,2,1};
-        ans[5]=new int[]{0,2,1};
-        ans[6]=new int[]{0,2,1};
-        ans[7]=new int[]{2,2,-1};
-        ans[8]=new int[]{0,2,1};
+
+    public Move[] YellowCrossRoutine(){
+        Move[] ans=new Move[6];
+        ans[0]=new Move(new int[]{2,0,1},"Assembling yellow cross");
+        ans[1]=new Move(new int[]{1,0,1},"Assembling yellow cross");
+        ans[2]=new Move(new int[]{0,2,-1},"Assembling yellow cross");
+        ans[3]=new Move(new int[]{1,0,-1},"Assembling yellow cross") ;
+        ans[4]=new Move(new int[]{0,2,1},"Assembling yellow cross");
+        ans[5]=new Move(new int[]{2,0,-1},"Assembling yellow cross");
         return ans;
     }
-    public int[][] LittleFish2(){
-        int[][] ans=new int[9][3];
-        ans[0]=new int[]{2,0,1};
-        ans[1]=new int[]{0,2,-1};
-        ans[2]=new int[]{2,0,-1};
-        ans[3]=new int[]{0,2,-1};
-        ans[4]=new int[]{2,0,1};
-        ans[5]=new int[]{0,2,-1};
-        ans[6]=new int[]{0,2,-1};
-        ans[7]=new int[]{2,0,-1};
-        ans[8]=new int[]{0,2,-1};
+    public Move[] LittleFish1(){
+        Move[] ans=new Move[9];
+        ans[0]=new Move(new int[]{2,2,1},"Assembling top yellow surface");
+        ans[1]=new Move(new int[]{0,2,1},"Assembling top yellow surface");
+        ans[2]=new Move(new int[]{2,2,-1},"Assembling top yellow surface");
+        ans[3]=new Move(new int[]{0,2,1},"Assembling top yellow surface");
+        ans[4]=new Move(new int[]{2,2,1},"Assembling top yellow surface");
+        ans[5]=new Move(new int[]{0,2,1},"Assembling top yellow surface");
+        ans[6]=new Move(new int[]{0,2,1},"Assembling top yellow surface");
+        ans[7]=new Move(new int[]{2,2,-1},"Assembling top yellow surface");
+        ans[8]=new Move(new int[]{0,2,1},"Assembling top yellow surface");
         return ans;
     }
-    public int[] getTopYellowFace(){
+    public Move[] LittleFish2(){
+        Move[] ans=new Move[9];
+        ans[0]=new Move(new int[]{2,0,1},"Assembling top yellow surface");
+        ans[1]=new Move(new int[]{0,2,-1},"Assembling top yellow surface");
+        ans[2]=new Move(new int[]{2,0,-1},"Assembling top yellow surface");
+        ans[3]=new Move(new int[]{0,2,-1},"Assembling top yellow surface");
+        ans[4]=new Move(new int[]{2,0,1},"Assembling top yellow surface");
+        ans[5]=new Move(new int[]{0,2,-1},"Assembling top yellow surface");
+        ans[6]=new Move(new int[]{0,2,-1},"Assembling top yellow surface");
+        ans[7]=new Move(new int[]{2,0,-1},"Assembling top yellow surface");
+        ans[8]=new Move(new int[]{0,2,-1},"Assembling top yellow surface");
+        return ans;
+    }
+
+    public Move getTopYellowFace(){
         int NumofYellow=0;
         if(Jcube.layers[Yaxis][0].rows[1].cells[0].c.color==yellowRepresentative){
             NumofYellow++;
@@ -538,202 +580,193 @@ public class Solver implements Serializable{
 
         if(NumofYellow==0){
             if(Jcube.layers[Yaxis][2].rows[0].cells[2].c.color!=yellowRepresentative){
-                return new int[]{0,2,1};
+                return new Move(new int[]{0,2,1},"Assembling top yellow surface");
             }
             else {
-                onRoutine=true;
-                currentRoutine=LittleFish1();
+                setCurrentRoutine(LittleFish1());
                 return currentRoutine[0];
             }
         }
         if (NumofYellow==2){
             if(Jcube.layers[Xaxis][2].rows[2].cells[2].c.color!=yellowRepresentative){
-                return new int[]{0,2,1};
+                return new Move(new int[]{0,2,1},"Assembling top yellow surface");
             }
             else {
-                onRoutine=true;
-                currentRoutine=LittleFish1();
+                setCurrentRoutine(LittleFish1());
                 return currentRoutine[0];
             }
         }
         if (NumofYellow==1){
             if(Jcube.layers[Xaxis][2].rows[0].cells[2].c.color==yellowRepresentative || Jcube.layers[Xaxis][2].rows[1].cells[2].c.color==yellowRepresentative){
                 if(Jcube.layers[Yaxis][2].rows[1].cells[2].c.color==yellowRepresentative){
-                    onRoutine=true;
-                    currentRoutine=LittleFish2();
+                    setCurrentRoutine(LittleFish2());
                     return currentRoutine[0];
                 }
                 else {
-                    return new int[]{0,2,1};
+                    return new Move(new int[]{0,2,1},"Assembling top yellow surface");
                 }
             }
             else {
                 if(Jcube.layers[Yaxis][2].rows[1].cells[0].c.color==yellowRepresentative){
-                    onRoutine=true;
-                    currentRoutine=LittleFish1();
+                    setCurrentRoutine(LittleFish1());
                     return currentRoutine[0];
                 }
                 else {
-                    return new int[]{0,2,1};
+                    return new Move(new int[]{0,2,1},"Assembling top yellow surface");
                 }
             }
 
         }
-        return new int[]{4,4,4};
+        return new Move(new int[]{4,4,4},"Assembling top yellow surface");
 
     }
 
-    public int[] getReadyForFinal(){
+    public Move getReadyForFinal(){
         if(Jcube.layers[Xaxis][1].rows[0].cells[1].c.color!=yellowRepresentative){
-            onRoutine=true;
-            currentRoutine=rotateCubeByZDown();
+            setCurrentRoutine(rotateCubeByZDown());
             return currentRoutine[0];
         }
         if (Jcube.layers[Yaxis][0].rows[2].ReadyforFinal() &&
                 Jcube.layers[Yaxis][0].rows[0].ReadyforFinal() &&
                 Jcube.layers[Yaxis][0].rows[1].ReadyforFinal() &&
                 Jcube.layers[Yaxis][0].rows[3].ReadyforFinal()){
-            onRoutine=true;
-            currentRoutine=rotateCubeByZUp();
+            setCurrentRoutine(rotateCubeByZUp());
             return currentRoutine[0];
         }
         else {
 
             if (Jcube.layers[Yaxis][0].rows[2].ReadyforFinal()) {
-                onRoutine = true;
-                currentRoutine = R2D2();
+                setCurrentRoutine(R2D2());
                 return currentRoutine[0];
             }
             if (!Jcube.layers[Yaxis][0].rows[2].ReadyforFinal() &&
                     !Jcube.layers[Yaxis][0].rows[0].ReadyforFinal() &&
                     !Jcube.layers[Yaxis][0].rows[1].ReadyforFinal() &&
                     !Jcube.layers[Yaxis][0].rows[3].ReadyforFinal()) {
-                onRoutine = true;
-                currentRoutine = R2D2();
+                setCurrentRoutine(R2D2());
                 return currentRoutine[0];
             }
-            return new int[]{1,0,1};
+            return new Move(new int[]{1,0,1},"Assembling the top layer");
         }
 
 
     }
-    public int[][] rotateCubeByZDown(){
-        int[][] ans=new int[3][3];
-        ans[0]=new int[]{2,0,1};
-        ans[1]=new int[]{2,1,1};
-        ans[2]=new int[]{2,2,1};
+    public Move[] rotateCubeByZDown(){
+        Move[] ans=new Move[3];
+        ans[0]=new Move(new int[]{2,0,1},"Assembling the top layer");
+        ans[1]=new Move(new int[]{2,1,1},"Assembling the top layer");
+        ans[2]=new Move(new int[]{2,2,1},"Assembling the top layer");
         return ans;
     }
-    public int[][] rotateCubeByZUp(){
-        int[][] ans=new int[3][3];
-        ans[0]=new int[]{2,0,-1};
-        ans[1]=new int[]{2,1,-1};
-        ans[2]=new int[]{2,2,-1};
+    public Move[] rotateCubeByZUp(){
+        Move[] ans=new Move[3];
+        ans[0]=new Move(new int[]{2,0,-1},"Assembling the top layer");
+        ans[1]=new Move(new int[]{2,1,-1},"Assembling the top layer");
+        ans[2]=new Move(new int[]{2,2,-1},"Assembling the top layer");
         return ans;
     }
-    public int[][] R2D2(){
-        int[][] ans=new int[12][3];
-        ans[0]=new int[]{2,2,1};
-        ans[1]=new int[]{2,2,1};
-        ans[2]=new int[]{0,0,-1};
-        ans[3]=new int[]{0,0,-1};
+    public Move[] R2D2(){
+        Move[] ans=new Move[12];
+        ans[0]=new Move(new int[]{2,2,1},"Assembling the top layer");
+        ans[1]=new Move(new int[]{2,2,1},"Assembling the top layer");
+        ans[2]=new Move(new int[]{0,0,-1},"Assembling the top layer");
+        ans[3]=new Move(new int[]{0,0,-1},"Assembling the top layer");
 
-        ans[4]=new int[]{2,2,1};
-        ans[5]=new int[]{0,2,1};
-        ans[6]=new int[]{2,2,-1};
+        ans[4]=new Move(new int[]{2,2,1},"Assembling the top layer");
+        ans[5]=new Move(new int[]{0,2,1},"Assembling the top layer");
+        ans[6]=new Move(new int[]{2,2,-1},"Assembling the top layer");
 
-        ans[7]=new int[]{0,0,-1};
-        ans[8]=new int[]{0,0,-1};
+        ans[7]=new Move(new int[]{0,0,-1},"Assembling the top layer");
+        ans[8]=new Move(new int[]{0,0,-1},"Assembling the top layer");
 
-        ans[9]=new int[]{2,2,1};
-        ans[10]=new int[]{0,2,-1};
-        ans[11]=new int[]{2,2,1};
+        ans[9]=new Move(new int[]{2,2,1},"Assembling the top layer");
+        ans[10]=new Move(new int[]{0,2,-1},"Assembling the top layer");
+        ans[11]=new Move(new int[]{2,2,1},"Assembling the top layer");
         return ans;
     }
-    public int[] getFinal(){
+    public Move getFinal(){
         if(Jcube.layers[Xaxis][2].rows[0].XOX() &&
                 Jcube.layers[Xaxis][2].rows[1].XOX() &&
                 Jcube.layers[Xaxis][2].rows[2].XOX() &&
                 Jcube.layers[Xaxis][2].rows[3].XOX() ){
-            onRoutine=true;
-            currentRoutine=LF12();
+            setCurrentRoutine(LF12());
             return currentRoutine[0];
         }
         else {
             if(!Jcube.layers[Xaxis][2].rows[0].XOX()){
                 if(Jcube.layers[Xaxis][2].rows[0].cells[1].c.color!=Jcube.layers[Xaxis][1].rows[0].cells[1].c.color){
-                    haveNextSingleInstruction=true;
-                    nextSingleInstruction=new int[] {0,0,1};
-                    return new int[]{0,1,1};
+
+                    setNextSingleInstruction(new Move(new int[]{0,0,1},"Assembling the top layer"));
+                    return new Move(new int[]{0,1,1},"Assembling the top layer");
                 }
                 else {
                     if(Jcube.layers[Xaxis][1].rows[2].cells[1].c.color==Jcube.layers[Xaxis][2].rows[3].cells[1].c.color){
-                        onRoutine=true;
-                        currentRoutine=LF21();
+                        setCurrentRoutine(LF12());
                         return currentRoutine[0];
                     }
                     if(Jcube.layers[Xaxis][1].rows[2].cells[1].c.color==Jcube.layers[Xaxis][2].rows[1].cells[1].c.color){
-                        onRoutine=true;
-                        currentRoutine=LF12();
+                        setCurrentRoutine(LF12());
                         return currentRoutine[0];
                     }
-                    else return new int[]{4,4,4};
+                    else return new Move(new int[]{4,4,4},"Assembling the top layer");
                 }
             }
             else {
-                return new int[]{0,2,1};
+                return new Move(new int[]{0,2,1},"Assembling the top layer");
             }
         }
 
     }
-    public int[][] LF12(){
-        int[][] ans=new int[18][3];
+    public Move[] LF12(){
+        Move[] ans=new Move[18];
 
-        ans[0]=new int[]{2,2,1};
-        ans[1]=new int[]{0,2,1};
-        ans[2]=new int[]{2,2,-1};
-        ans[3]=new int[]{0,2,1};
-        ans[4]=new int[]{2,2,1};
-        ans[5]=new int[]{0,2,1};
-        ans[6]=new int[]{0,2,1};
-        ans[7]=new int[]{2,2,-1};
-        ans[8]=new int[]{0,2,1};
+        ans[0]=new Move(new int[]{2,2,1},"Assembling the top layer");
+        ans[1]=new Move(new int[]{0,2,1},"Assembling the top layer");
+        ans[2]=new Move(new int[]{2,2,-1},"Assembling the top layer");
+        ans[3]=new Move(new int[]{0,2,1},"Assembling the top layer");
+        ans[4]=new Move(new int[]{2,2,1},"Assembling the top layer");
+        ans[5]=new Move(new int[]{0,2,1},"Assembling the top layer");
+        ans[6]=new Move(new int[]{0,2,1},"Assembling the top layer");
+        ans[7]=new Move(new int[]{2,2,-1},"Assembling the top layer");
+        ans[8]=new Move(new int[]{0,2,1},"Assembling the top layer");
 
-        ans[9]=new int[]{2,0,1};
-        ans[10]=new int[]{0,2,-1};
-        ans[11]=new int[]{2,0,-1};
-        ans[12]=new int[]{0,2,-1};
-        ans[13]=new int[]{2,0,1};
-        ans[14]=new int[]{0,2,-1};
-        ans[15]=new int[]{0,2,-1};
-        ans[16]=new int[]{2,0,-1};
-        ans[17]=new int[]{0,2,-1};
+        ans[9]=new Move(new int[]{2,0,1},"Assembling the top layer");
+        ans[10]=new Move(new int[]{0,2,-1},"Assembling the top layer");
+        ans[11]=new Move(new int[]{2,0,-1},"Assembling the top layer");
+        ans[12]=new Move(new int[]{0,2,-1},"Assembling the top layer");
+        ans[13]=new Move(new int[]{2,0,1},"Assembling the top layer");
+        ans[14]=new Move(new int[]{0,2,-1},"Assembling the top layer");
+        ans[15]=new Move(new int[]{0,2,-1},"Assembling the top layer");
+        ans[16]=new Move(new int[]{2,0,-1},"Assembling the top layer");
+        ans[17]=new Move(new int[]{0,2,-1},"Finished");
 
         return ans;
     }
 
-    public int[][] LF21(){
-        int[][] ans=new int[18][3];
+    public Move[] LF21(){
+        Move[] ans=new Move[18];
 
-        ans[0]=new int[]{2,0,1};
-        ans[1]=new int[]{0,2,-1};
-        ans[2]=new int[]{2,0,-1};
-        ans[3]=new int[]{0,2,-1};
-        ans[4]=new int[]{2,0,1};
-        ans[5]=new int[]{0,2,-1};
-        ans[6]=new int[]{0,2,-1};
-        ans[7]=new int[]{2,0,-1};
-        ans[8]=new int[]{0,2,-1};
 
-        ans[9]=new int[]{2,2,1};
-        ans[10]=new int[]{0,2,1};
-        ans[11]=new int[]{2,2,-1};
-        ans[12]=new int[]{0,2,1};
-        ans[13]=new int[]{2,2,1};
-        ans[14]=new int[]{0,2,1};
-        ans[15]=new int[]{0,2,1};
-        ans[16]=new int[]{2,2,-1};
-        ans[17]=new int[]{0,2,1};
+        ans[0]=new Move(new int[]{2,0,1},"Assembling the top layer");
+        ans[1]=new Move(new int[]{0,2,-1},"Assembling the top layer");
+        ans[2]=new Move(new int[]{2,0,-1},"Assembling the top layer");
+        ans[3]=new Move(new int[]{0,2,-1},"Assembling the top layer");
+        ans[4]=new Move(new int[]{2,0,1},"Assembling the top layer");
+        ans[5]=new Move(new int[]{0,2,-1},"Assembling the top layer");
+        ans[6]=new Move(new int[]{0,2,-1},"Assembling the top layer");
+        ans[7]=new Move(new int[]{2,0,-1},"Assembling the top layer");
+        ans[8]=new Move(new int[]{0,2,-1},"Assembling the top layer");
+
+        ans[9]=new Move(new int[]{2,2,1},"Assembling the top layer");
+        ans[10]=new Move(new int[]{0,2,1},"Assembling the top layer");
+        ans[11]=new Move(new int[]{2,2,-1},"Assembling the top layer");
+        ans[12]=new Move(new int[]{0,2,1},"Assembling the top layer");
+        ans[13]=new Move(new int[]{2,2,1},"Assembling the top layer");
+        ans[14]=new Move(new int[]{0,2,1},"Assembling the top layer");
+        ans[15]=new Move(new int[]{0,2,1},"Assembling the top layer");
+        ans[16]=new Move(new int[]{2,2,-1},"Assembling the top layer");
+        ans[17]=new Move(new int[]{0,2,1},"Finished");
+
         return ans;
     }
 
@@ -751,5 +784,17 @@ public class Solver implements Serializable{
 
         return true;
 
+    }
+
+    public Solver clone(){
+        Solver clone=null;
+        try {
+            clone=(Solver)super.clone();
+        }
+        catch (CloneNotSupportedException e){
+            e.printStackTrace();
+        }
+
+        return clone;
     }
 }

@@ -18,7 +18,9 @@ public class StepsShower extends View{
     int height=2308;
     int steps=0;
 
-    Canvas c;
+    String msg="";
+
+
     public StepsShower(Context c,int w,int h){
         super(c);
         width=w;
@@ -33,10 +35,14 @@ public class StepsShower extends View{
     }
     @Override
     protected void onDraw(Canvas canvas) {
-        Shader mShader = new LinearGradient(0,0,width*5/18,getHeight()/6,new int[] {Color.RED,Color.YELLOW,Color.GREEN},null, Shader.TileMode.REPEAT);
+        paint.setTextSize(80 * width / 1440);
+        paint.setColor(Color.WHITE);
+        canvas.drawText(msg,0,getHeight()*19/20,paint);
+
+        Shader mShader = new LinearGradient(0,0,width*5/18,getHeight()/6,new int[] {Color.RED,Color.YELLOW,Color.RED},null, Shader.TileMode.REPEAT);
         paint.setShader(mShader);
-        canvas.drawText("Steps: "+String.valueOf(steps),width/100,getHeight()/6,paint);
-        c=canvas;
+        canvas.drawText("Steps: " + String.valueOf(steps),width/100,getHeight()/6,paint);
+        paint.reset();
 
 
     }
