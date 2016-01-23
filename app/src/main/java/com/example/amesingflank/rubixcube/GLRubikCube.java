@@ -21,9 +21,9 @@ public class GLRubikCube {
     public final int Yaxis=1;
     public final int Zaxis=2;
     public static float translationfactor=0.52f;
-    Cube Jcube=new Cube();
+    JavaCube Jcube=new JavaCube();
     public GLRubikCube(){
-        Jcube=new Cube();
+        Jcube=new JavaCube();
         float[][][][][] Colordata=GLCubeColor.Cube27data();
         for (int i = 0; i <3 ; i++) {
             for (int j = 0; j <3 ; j++) {
@@ -68,6 +68,7 @@ public class GLRubikCube {
     public float yangle=0;
     
     public void operate(int ain,int iin,float xRotationIn,float yRotationIn,float layerRotationIn){
+
         //控制整体旋转和层旋转，结果全都反映到CubeMatrixes里面
         //ain是要旋转的单层的方向，可以是X,Y,Z
         //inn是要旋转的单层的编号，可以是0，1，2
@@ -347,7 +348,5 @@ public class GLRubikCube {
 
         }
     }
-    public void Solve(){
 
-    }
 }

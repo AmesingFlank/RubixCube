@@ -37,7 +37,7 @@ public class StepsShower extends View{
     protected void onDraw(Canvas canvas) {
         paint.setTextSize(80 * width / 1440);
         paint.setColor(Color.WHITE);
-        canvas.drawText(msg,0,getHeight()*19/20,paint);
+        canvas.drawText(" "+msg,0,getHeight()*19/20,paint);
 
         Shader mShader = new LinearGradient(0,0,width*5/18,getHeight()/6,new int[] {Color.RED,Color.YELLOW,Color.RED},null, Shader.TileMode.REPEAT);
         paint.setShader(mShader);

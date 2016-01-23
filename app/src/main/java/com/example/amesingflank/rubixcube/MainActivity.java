@@ -271,6 +271,7 @@ public class MainActivity extends AppCompatActivity {
             ss.setVisibility(View.INVISIBLE);
             if(g.mRenderer.Solution.size()!=0 && g.mRenderer.SolutionIndex!=g.mRenderer.Solution.size()){
                 ss.setVisibility(View.VISIBLE);
+                ss.invalidate();
             }
             addContentView(ss, wrap);
             g.mRenderer.setStpesShower(ss);
@@ -281,21 +282,57 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     public void Pause(){
-        g.mRenderer.onCoherent=false;
         g.mRenderer.Paused=true;
         if(g.mRenderer.onCoherent){
             g.mRenderer.clear_Rotation();
         }
+        g.mRenderer.onCoherent=false;
+
+
     }
     public void Continue(){
 
-        if(!firstTime){
+        if(g.mRenderer.hasSolution){
             g.mRenderer.Paused=false;
             g.mRenderer.onCoherent=true;
+            ss.setVisibility(View.VISIBLE);
+            ss.invalidate();
         }
+    }
+
+    JavaCube JCubeBackup;
+    int SolutionIndexBackup;
+    boolean hasSolutionBackup;
+    LinkedList<Move> SolutionBackup;
+    int stepsBackup=0;
+
+    public void Backup(){
+        JCubeBackup=g.mRenderer.glrc.Jcube.clone();
+        SolutionIndexBackup=g.mRenderer.SolutionIndex;
+        hasSolutionBackup=g.mRenderer.hasSolution;
+        SolutionBackup=g.mRenderer.Solution;
+        if(ss!=null){
+            stepsBackup=ss.steps;
+        }
+
+    }
+
+    public void RestoreBackup(){
+        g.mRenderer.setSyncwithJavaCube(JCubeBackup);
+        g.mRenderer.SolutionIndex=SolutionIndexBackup;
+        g.mRenderer.Solution=SolutionBackup;
+        g.mRenderer.hasSolution=hasSolutionBackup;
+        if(ss!=null){
+            addContentView(ss,wrap);
+            ss.steps=stepsBackup;
+            g.mRenderer.setStpesShower(ss);
+        }
+
     }
     public void enterSettings(){
 
+        Pause();
+        Backup();
 
         setContentView(R.layout.settingslayout);
 
@@ -319,8 +356,11 @@ public class MainActivity extends AppCompatActivity {
                 int p=200-seekBar.getProgress();
                 RSC=9/(float)p;
 
+                LL.removeAllViews();
                 restart();
+                Pause();
                 inSettings=false;
+                RestoreBackup();
 
             }
         });
@@ -335,8 +375,10 @@ public class MainActivity extends AppCompatActivity {
                 Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
                 setSupportActionBar(toolbar);
 
+                LL.removeAllViews();
                 restart();
                 inSettings=false;
+                RestoreBackup();
 
             }
         });
@@ -344,6 +386,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void enterAbout(){
+        Backup();
         setContentView(R.layout.aboutlayout);
         inAbout=true;
         Button AboutBTN=(Button)findViewById(R.id.AboutBTN);
@@ -356,25 +399,14 @@ public class MainActivity extends AppCompatActivity {
                 Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
                 setSupportActionBar(toolbar);
                 restart();
-                inAbout=false;
+                inAbout = false;
+                RestoreBackup();
             }
         });
     }
 
 
     public void intelliSolve(){
-    /*    int n=10000;
-
-        Cube[] css=new Cube[n];
-        long aa=SystemClock.currentThreadTimeMillis();
-        for (int i = 0; i <n ; i++) {
-            css[i]=g.mRenderer.glrc.Jcube.clone();
-          //  Log.w("Logged:   ",String.valueOf(i));
-        }
-        long bb=SystemClock.currentThreadTimeMillis();
-
-        Log.w("Time: ",String.valueOf(bb-aa));*/
-
 
        firstTime=false;
         if(!g.mRenderer.hasSolution){
@@ -417,11 +449,14 @@ public class MainActivity extends AppCompatActivity {
                 setContentView(R.layout.activity_main);
                 Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
                 setSupportActionBar(toolbar);
-                int p=seekBar.getProgress();
-
+                int p=200-seekBar.getProgress();
                 RSC=9/(float)p;
+
+                LL.removeAllViews();
                 restart();
+                Pause();
                 inSettings=false;
+                RestoreBackup();
             }
             else {
                 if(inAbout){
@@ -430,6 +465,7 @@ public class MainActivity extends AppCompatActivity {
                     setSupportActionBar(toolbar);
                     restart();
                     inAbout=false;
+                    RestoreBackup();
                 }
                 else {
                     //System.exit(0);

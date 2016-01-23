@@ -15,7 +15,7 @@ public class RoutineSolver implements Serializable,Cloneable{
     public LinkedList<Move> getSolution(){
         LinkedList<Move> Solution=new LinkedList<Move>();
         Move step=nextMove();
-        while (step.action[0]!=999){
+        while (step.action[0]!=999 && step.action[0]!=4){
             Log.w(String.valueOf("        " + step.action[0]) + "   " + String.valueOf(step.action[1]) + "   " + String.valueOf(step.action[2]) + "   ", step.message);
             Solution.add(step);
             if(step.action[2]==1){
@@ -34,17 +34,14 @@ public class RoutineSolver implements Serializable,Cloneable{
     public final int Xaxis = 0;
     public final int Yaxis = 1;
     public final int Zaxis = 2;
-    public float[] yellowRepresentative=GLCubeColor.yellow;
-    public float[] whiteRepresentative=GLCubeColor.white;
+    public int yellowRepresentative=JavaSingleCube.yellow;
+    public int whiteRepresentative=JavaSingleCube.white;
     JavaCube Jcube;
     public RoutineSolver(JavaCube Jin){
         Jcube=Jin;
         //setColor();
     }
-    public void setColor(){
-        yellowRepresentative=Jcube.singleCubes[1][2][1].ColorArray[5];
-        whiteRepresentative=Jcube.singleCubes[1][0][1].ColorArray[4];
-    }
+
 
     private int routineIndex=1;
     private boolean onRoutine=false;
@@ -72,11 +69,9 @@ public class RoutineSolver implements Serializable,Cloneable{
 
 
     public Move nextMove(){
-        boolean eeee=false;
-        if(Jcube.singleCubes[1][1][1].ColorArray[0]!=GLCubeColor.blank){
-            eeee=true;
-        }
-        if (finishedEverything || checkFinished()){
+
+        finishedEverything=checkFinished();
+        if (finishedEverything){
             return new Move(new int[]{999,999,999},"");
 
         }
@@ -258,7 +253,8 @@ public class RoutineSolver implements Serializable,Cloneable{
                                 if(Jcube.singleCubes[0][2][0].ColorArray[0]==Jcube.singleCubes[2][2][0].ColorArray[0] &&
                                         Jcube.singleCubes[0][2][2].ColorArray[1]==Jcube.singleCubes[2][2][2].ColorArray[1] &&
                                         Jcube.singleCubes[0][2][0].ColorArray[2]==Jcube.singleCubes[0][2][2].ColorArray[2] &&
-                                        Jcube.singleCubes[2][2][0].ColorArray[3]==Jcube.singleCubes[2][2][2].ColorArray[3]){
+                                        Jcube.singleCubes[2][2][0].ColorArray[3]==Jcube.singleCubes[2][2][2].ColorArray[3] &&
+                                        Jcube.singleCubes[1][2][0].ColorArray[0]!=yellowRepresentative){
                                     readyforFinal=true;
                                 }
                                 else {
@@ -491,17 +487,18 @@ public class RoutineSolver implements Serializable,Cloneable{
         return ans;
     }
     public Move[] MoveBottomWhite(){
-        Move[] ans=new Move[3];
+        Move[] ans=new Move[4];
         ans[0]=new Move(new int[]{2,0,1},"Assembling white layer");
         ans[1]=new Move(new int[]{0,0,-1},"Assembling white layer");
-        ans[2]=new Move(new int[]{2,0,-1},"Assembling white layer");
+        ans[2]=new Move(new int[]{0,0,-1},"Assembling white layer");
+        ans[3]=new Move(new int[]{2,0,-1},"Assembling white layer");
         return ans;
     }
     public Move[] MoveBottomWhite2(){
         Move[] ans=new Move[3];
-        ans[0]=new Move(new int[]{2,0,1},"Assembling white layer");
-        ans[1]=new Move(new int[]{0,0,1},"Assembling white layer");
-        ans[2]=new Move(new int[]{2,0,-1},"Assembling white layer");
+        ans[0]=new Move(new int[]{2,0,1},"Assembling white layerMoveBottomWhite2");
+        ans[1]=new Move(new int[]{0,0,1},"Assembling white layerMoveBottomWhite2");
+        ans[2]=new Move(new int[]{2,0,-1},"Assembling white layerMoveBottomWhite2");
         return ans;
     }
 
@@ -793,7 +790,7 @@ public class RoutineSolver implements Serializable,Cloneable{
                 if(Jcube.singleCubes[0][0][0].ColorArray[4]!=Jcube.singleCubes[i][0][j].ColorArray[4]){
                     return false;
                 }
-                if(Jcube.singleCubes[2][2][2].ColorArray[5]!=Jcube.singleCubes[i][0][j].ColorArray[5]){
+                if(Jcube.singleCubes[2][2][2].ColorArray[5]!=Jcube.singleCubes[i][2][j].ColorArray[5]){
                     return false;
                 }
             }

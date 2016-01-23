@@ -65,6 +65,9 @@ public class GLrenderer implements GLSurfaceView.Renderer{
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         GLES20.glClearColor(0.55f,0.68f,1f,0f);
 
+        if(need2Sync){
+            SyncwithJavaCube();
+        }
         if(firstdrawflag==false){
             glrc.firstdraw(mMVPMatrix);
             firstdrawflag=true;
@@ -75,13 +78,19 @@ public class GLrenderer implements GLSurfaceView.Renderer{
                 time0=SystemClock.uptimeMillis();
             }
             isRotating=rotationAxis<3;
-            long time=SystemClock.uptimeMillis()-time0;
-            float angle=(int)(time)*RotationSpeedCoefficient;
-            if(angle>=85){
-                angle=90f;
+            float angle=0;
+            if(isRotating  || onCoherent){
+                long time=SystemClock.uptimeMillis()-time0;
+                angle=(int)(time)*RotationSpeedCoefficient;
+                if(angle>=85){
+                    angle=90f;
+                }
             }
+
             glrc.operate(rotationAxis,rotationIndex,xangle,yangle,angle*rotationDirection);
-            if (angle==90f){
+
+
+            if (angle==90f &&(isRotating  || onCoherent)){
                 clear_Rotation();
                 timeflag=false;
             }
@@ -118,22 +127,28 @@ public class GLrenderer implements GLSurfaceView.Renderer{
                 SolutionIndex=0;
                 Solution=new LinkedList<Move>();
                 onCoherent=false;
+                Paused=false;
                 hasSolution=false;
                 ss.msg="Finished";
                 ss.postInvalidate();
             }
             else {
-                int[] thisStep=Solution.get(SolutionIndex).action;
-                if(!Paused)
+
+                if(!Paused){
+                    int[] thisStep=Solution.get(SolutionIndex).action;
                     setRotation(thisStep[0],thisStep[1],thisStep[2]);
-                ss.msg=Solution.get(SolutionIndex).message;
-                SolutionIndex++;
+                    ss.msg=Solution.get(SolutionIndex).message;
+                    SolutionIndex++;
+                }
+
                 if(SolutionIndex!=Solution.size()){
                     ss.steps++;
                     ss.postInvalidate();
                 }
 
             }
+            ss.setVisibility(View.VISIBLE);
+            ss.postInvalidate();
         }
     }
     public boolean onCoherent=false;
@@ -148,10 +163,10 @@ public class GLrenderer implements GLSurfaceView.Renderer{
         }
     }
     public void getIntelliSolution(){
-        Solution=glrc.Jcube.getIntelliSolution();
-        if (Solution.size()!=0){
-            hasSolution=true;
-        }
+       // Solution=glrc.Jcube.getIntelliSolution();
+        //if (Solution.size()!=0){
+          //  hasSolution=true;
+        //}
     }
     StepsShower ss;
     public void setStpesShower(StepsShower sin){
@@ -417,5 +432,24 @@ public class GLrenderer implements GLSurfaceView.Renderer{
         return shader;
     }
 
+
+    JavaCube tobeSynced=new JavaCube();
+
+    public void SyncwithJavaCube(){
+        glrc.Jcube=tobeSynced.clone();
+        for (int x = 0; x < 3; x++) {
+            for (int y = 0; y < 3; y++) {
+                for (int z = 0; z < 3; z++) {
+                    glrc.singleCubes[x][y][z].SyncWithJavaSingleCube(tobeSynced.singleCubes[x][y][z]);
+                }
+            }
+        }
+        need2Sync=false;
+    }
+    public void setSyncwithJavaCube(JavaCube jin){
+        tobeSynced=jin.clone();
+        need2Sync=true;
+    }
+    boolean need2Sync=true;
 
 }

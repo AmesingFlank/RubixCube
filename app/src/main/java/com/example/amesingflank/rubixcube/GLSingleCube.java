@@ -238,6 +238,33 @@ public class GLSingleCube {//单个的正方体，27个组成一个魔方
         zLRMatrixes=new float[]{1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
     }
 
+    public void SyncWithJavaSingleCube(JavaSingleCube jin){
+        for (int i = 0; i < 6; i++) {
+            switch (jin.ColorArray[i]){
+                case JavaSingleCube.orange:
+                    ColorArray[i]=GLCubeColor.orange;
+                    break;
+                case JavaSingleCube.red:
+                    ColorArray[i]=GLCubeColor.red;
+                    break;
+                case JavaSingleCube.blue:
+                    ColorArray[i]=GLCubeColor.blue;
+                    break;
+                case JavaSingleCube.green:
+                    ColorArray[i]=GLCubeColor.green;
+                    break;
+                case JavaSingleCube.white:
+                    ColorArray[i]=GLCubeColor.white;
+                    break;
+                case JavaSingleCube.yellow:
+                    ColorArray[i]=GLCubeColor.yellow;
+                    break;
+                case JavaSingleCube.blank:
+                    ColorArray[i]=GLCubeColor.blank;
+                    break;
+            }
+        }
+    }
 
 }
 
