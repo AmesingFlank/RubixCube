@@ -25,7 +25,7 @@ Solving:
 
 Scanning:
 
-<img src="https://cloud.githubusercontent.com/assets/16066115/19848860/1b3a2b8a-9f8b-11e6-91df-8eb0327e5716.png" height="400px">
+<img src="https://cloud.githubusercontent.com/assets/16066115/19849839/41056b9a-9f90-11e6-9ef4-b4c51e947d04.png" height="300px">
 <img src="https://cloud.githubusercontent.com/assets/16066115/19849507/9d59bc22-9f8e-11e6-94ed-150e1d60efc3.png" height="300px">
 
 # Licence
