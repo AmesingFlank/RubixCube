@@ -1,11 +1,12 @@
 package com.example.amesingflank.rubixcube;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 
 /**
  * Created by AmesingFlank on 16/1/21.
  */
-public class JavaCube implements Cloneable{
+public class JavaCube implements Cloneable,Serializable{
     public JavaSingleCube[][][] singleCubes=new JavaSingleCube[3][3][3];
     public final int Xaxis=0;
     public final int Yaxis=1;
@@ -150,6 +151,12 @@ public class JavaCube implements Cloneable{
         LinkedList<Move> solution=rs.getSolution();
         return solution;
     }
+    public LinkedList<Move> getIntelliSolution(){
+        JavaCube temp=clone();
+        IntelliSolver rs=new IntelliSolver(temp);
+        LinkedList<Move> solution=rs.getSolution2();
+        return solution;
+    }
 
     public JavaCube clone(){
         JavaCube clone=new JavaCube();
@@ -162,8 +169,93 @@ public class JavaCube implements Cloneable{
         }
         return clone;
     }
+
+    @Override
+    public boolean equals(Object o){
+        if(o.hashCode()==hashCode()){
+            return true;
+        }
+        else
+            return false;
+    }
+    @Override
+    public int hashCode(){
+        int[] HashofFaces=getHashofFaces();
+        int ans=HashofFaces[0];
+        for (int i = 1; i <6 ; i++) {
+            ans^=HashofFaces[i];
+        }
+        return ans;
+    }
+
+    public int[] getHashofFaces(){
+        int[] ans=new int[6];
+        for (int i = 0; i <6 ; i++) {
+            ans[i]=0;
+        }
+        for (int f = 0; f <6; f++) {
+            int index=8;
+            switch (f){
+                case 0:
+                    index=8;
+                    for (int i = 0; i < 3; i++) {
+                        for (int j = 0; j < 3; j++) {
+                            ans[f]+=singleCubes[i][j][0].ColorArray[0]*Math.pow(10,index);
+                            index--;
+                        }
+                    }
+                    break;
+                case 1:
+                    index=8;
+                    for (int i = 0; i < 3; i++) {
+                        for (int j = 0; j < 3; j++) {
+                            ans[f]+=singleCubes[i][j][2].ColorArray[1]*Math.pow(10,index);
+                            index--;
+                        }
+                    }
+                    break;
+                case 2:
+                    index=8;
+                    for (int i = 0; i < 3; i++) {
+                        for (int j = 0; j < 3; j++) {
+                            ans[f]+=singleCubes[0][j][i].ColorArray[2]*Math.pow(10,index);
+                            index--;
+                        }
+                    }
+                    break;
+                case 3:
+                    index=8;
+                    for (int i = 0; i < 3; i++) {
+                        for (int j = 0; j < 3; j++) {
+                            ans[f]+=singleCubes[2][j][j].ColorArray[3]*Math.pow(10,index);
+                            index--;
+                        }
+                    }
+                    break;
+                case 4:
+                    index=8;
+                    for (int i = 0; i < 3; i++) {
+                        for (int j = 0; j < 3; j++) {
+                            ans[f]+=singleCubes[0][j][i].ColorArray[4]*Math.pow(10,index);
+                            index--;
+                        }
+                    }
+                    break;
+                case 5:
+                    index=8;
+                    for (int i = 0; i < 3; i++) {
+                        for (int j = 0; j < 3; j++) {
+                            ans[f]+=singleCubes[2][j][i].ColorArray[5]*Math.pow(10,index);
+                            index--;
+                        }
+                    }
+                    break;
+            }
+        }
+        return ans;
+    }
 }
-class JavaSingleCube implements Cloneable{
+class JavaSingleCube implements Cloneable,Serializable{
     public static final int orange=0;
     public static final int red=1;
     public static final int blue=2;

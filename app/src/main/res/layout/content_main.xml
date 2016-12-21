@@ -28,5 +28,19 @@
         android:layout_alignWithParentIfMissing="true"
         android:layout_margin="0dp">
 
+
     </LinearLayout>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Scan"
+        android:id="@+id/scanBTN" />
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Finish Scan"
+        android:id="@+id/finishscanBTN"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentStart="false" />
+
 </RelativeLayout>

@@ -253,7 +253,6 @@ public class GLRubikCube {
 
 
     public float[][][][] getVertices(){
-        float factor=GLRubikCube.translationfactor+0.25f;
         float[][][][] vertices=new float[2][2][2][4];
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j <2 ; j++) {
@@ -264,6 +263,8 @@ public class GLRubikCube {
                     temp[0]+=xTranslates[2*i][2*j][2*k];
                     temp[1]+=yTranslates[2*i][2*j][2*k];
                     temp[2]+=zTranslates[2*i][2*j][2*k];
+                   // Matrix.multiplyMV(vertices[i][j][k], 0, xMatrixes, 0,temp, 0 );
+                   // Matrix.multiplyMV(vertices[i][j][k], 0, yMatrixes, 0, vertices[i][j][k], 0);
                     Matrix.multiplyMV(vertices[i][j][k], 0, xMatrixes, 0,temp, 0 );
                     Matrix.multiplyMV(vertices[i][j][k], 0, yMatrixes, 0, vertices[i][j][k], 0);
 

@@ -1,6 +1,8 @@
 package com.example.amesingflank.rubixcube;
 
 import android.content.Context;
+import android.opengl.GLES20;
+import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
 import android.view.MotionEvent;
@@ -45,6 +47,9 @@ public class glsv extends GLSurfaceView {
         }
     }
 
+    public int touchedFace=-1;
+    public boolean onScan=false;
+    JavaCube backup;
     @Override
     public boolean onTouchEvent(MotionEvent e) {
 
@@ -60,6 +65,7 @@ public class glsv extends GLSurfaceView {
 
                 int[] res=mRenderer.handleTouch(normalizedX,normalizedY);
                 HasIntersection=res[0];
+                touchedFace=res[1];
                 side0=res[1];
                 for (int i = 0; i <3 ; i++) {
                     cubeIndex0[i]=res[i+2];
@@ -68,8 +74,57 @@ public class glsv extends GLSurfaceView {
                     mRenderer.timeflag=false;
                 }
 
-                //mRenderer.setRotation(2,0,-1);
-                //旋转Z0层
+                if(onScan && res[0]==1){
+                    if(backup!=null){
+                        mRenderer.setSyncwithJavaCube(backup);
+                        mRenderer.SyncwithJavaCube();
+                    }
+                    backup=mRenderer.glrc.Jcube.clone();
+                    switch (touchedFace){
+                        case 0:
+                            for (int i = 0; i < 3; i++) {
+                                for (int j = 0; j < 3; j++) {
+                                    mRenderer.glrc.singleCubes[i][j][0].ColorArray[touchedFace]=GLCubeColor.blank;
+                                }
+                            }
+                            break;
+                        case 1:
+                            for (int i = 0; i < 3; i++) {
+                                for (int j = 0; j < 3; j++) {
+                                    mRenderer.glrc.singleCubes[i][j][2].ColorArray[touchedFace]=GLCubeColor.blank;
+                                }
+                            }
+                            break;
+                        case 2:
+                            for (int i = 0; i < 3; i++) {
+                                for (int j = 0; j < 3; j++) {
+                                    mRenderer.glrc.singleCubes[0][j][i].ColorArray[touchedFace]=GLCubeColor.blank;
+                                }
+                            }
+                            break;
+                        case 3:
+                            for (int i = 0; i < 3; i++) {
+                                for (int j = 0; j < 3; j++) {
+                                    mRenderer.glrc.singleCubes[2][j][i].ColorArray[touchedFace]=GLCubeColor.blank;
+                                }
+                            }
+                            break;
+                        case 4:
+                            for (int i = 0; i < 3; i++) {
+                                for (int j = 0; j < 3; j++) {
+                                    mRenderer.glrc.singleCubes[i][0][j].ColorArray[touchedFace]=GLCubeColor.blank;
+                                }
+                            }
+                            break;
+                        case 5:
+                            for (int i = 0; i < 3; i++) {
+                                for (int j = 0; j < 3; j++) {
+                                    mRenderer.glrc.singleCubes[i][2][j].ColorArray[touchedFace]=GLCubeColor.blank;
+                                }
+                            }
+                            break;
+                    }
+                }
 
                 break;
             case MotionEvent.ACTION_MOVE:
@@ -81,7 +136,7 @@ public class glsv extends GLSurfaceView {
                             dy*TOUCH_SCALE_FACTOR/((float)(getWidth())));
                     requestRender();
                 }
-                else if(HasIntersection==1){
+                else if(HasIntersection==1 && !onScan){
 
                     int[] temp=mRenderer.handleTouch(normalizedX,normalizedY);
                     HasIntersection=temp[0];
@@ -221,6 +276,7 @@ public class glsv extends GLSurfaceView {
                                 if(cubeIndex0[0]==cubeIndex1[0] && cubeIndex0[1]==cubeIndex1[1] && cubeIndex0[2]>cubeIndex1[2]){
                                     mRenderer.setRotation(2, cubeIndex0[0], 1);
                                     resetData(2);
+                                    
                                     break xx;
                                 }
                                 break ;
@@ -242,6 +298,9 @@ public class glsv extends GLSurfaceView {
                 //设置xy轴整体旋转角度
                 break;
             case MotionEvent.ACTION_UP:
+                if(!mRenderer.isRotating){
+                    mRenderer.timeflag=false;
+                }
                 resetData(0);
                 //mRenderer.clear_xyangle();
 

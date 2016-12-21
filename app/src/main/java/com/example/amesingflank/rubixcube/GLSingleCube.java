@@ -15,57 +15,42 @@ public class GLSingleCube {//单个的正方体，27个组成一个魔方
 
     private final int mProgram;
 
+
     static final int COORDS_PER_VERTEX = 3;
     public float squareCoords[] = {
             -0.25f , 0.25f , -0.25f ,
             -0.25f , -0.25f , -0.25f ,
             0.25f , -0.25f , -0.25f ,
-
             -0.25f , 0.25f , -0.25f ,
             0.25f , -0.25f , -0.25f ,
             0.25f , 0.25f , -0.25f ,//front
-
-
             -0.25f , 0.25f , 0.25f ,
             -0.25f , -0.25f , 0.25f ,
             0.25f , -0.25f , 0.25f ,
-
             -0.25f , 0.25f , 0.25f ,
             0.25f , -0.25f , 0.25f ,
             0.25f , 0.25f , 0.25f ,//back
-
-
             -0.25f , -0.25f , 0.25f ,
             -0.25f , -0.25f , -0.25f ,
             -0.25f , 0.25f , -0.25f ,
-
             -0.25f , -0.25f , 0.25f ,
             -0.25f , 0.25f , -0.25f ,
             -0.25f , 0.25f , 0.25f ,//left
-
-
             0.25f , -0.25f , 0.25f ,
             0.25f , -0.25f , -0.25f ,
             0.25f , 0.25f , -0.25f ,
-
             0.25f , -0.25f , 0.25f ,
             0.25f , 0.25f , -0.25f ,
             0.25f , 0.25f , 0.25f ,//right
-
-
             0.25f , -0.25f , -0.25f ,
             -0.25f , -0.25f , -0.25f ,
             -0.25f , -0.25f , 0.25f ,
-
             0.25f , -0.25f , -0.25f ,
             -0.25f , -0.25f , 0.25f ,
             0.25f , -0.25f , 0.25f ,//down
-
-
             0.25f , 0.25f , -0.25f ,
             -0.25f , 0.25f , -0.25f ,
             -0.25f , 0.25f , 0.25f ,
-
             0.25f , 0.25f , -0.25f ,
             -0.25f , 0.25f , 0.25f ,
             0.25f , 0.25f , 0.25f ,//up
@@ -74,8 +59,8 @@ public class GLSingleCube {//单个的正方体，27个组成一个魔方
 
     float[][] ColorArray=GLCubeColor.ColorArray;
 
-    public float[] xMatrixes=new float[16];
-    public float[] yMatrixes=new float[16];
+    public float[] xMatrixes=new float[]{1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
+    public float[] yMatrixes=new float[]{1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
     public void setxMatrixes(float[] in){
         xMatrixes=in.clone();
     }
@@ -98,6 +83,9 @@ public class GLSingleCube {//单个的正方体，27个组成一个魔方
         xLRMatrixes=in.clone();
     }
 
+   // public float[] ztMat=new float[]{1,0,0,0,0,1,0,0,0,0,1,0,0f,0f,0f,1};
+    //public int ztHandle;
+
 
 
     private final String vertexShaderCode =
@@ -108,6 +96,7 @@ public class GLSingleCube {//单个的正方体，27个组成一个魔方
             "uniform mat4 xMatrix;" +
             "uniform mat4 yMatrix;" +
             "uniform mat4 uMVPMatrix;" +
+                    "uniform mat4 zt;"+
                     "attribute vec4 vPosition;" +
                     "void main() {" +
                     "  gl_Position = vPosition;" +
@@ -116,6 +105,7 @@ public class GLSingleCube {//单个的正方体，27个组成一个魔方
                     "  gl_Position = zLRMatrix * gl_Position;" +
                     "  gl_Position = xMatrix * gl_Position;" +
                     "  gl_Position = yMatrix * gl_Position;" +
+                 //   "gl_Position = zt * gl_Position;"+
 
                     "  gl_Position = uMVPMatrix * gl_Position;" +
                     "}";
@@ -158,8 +148,6 @@ public class GLSingleCube {//单个的正方体，27个组成一个魔方
         int fragmentShader = GLrenderer.loadShader(GLES20.GL_FRAGMENT_SHADER,
                 fragmentShaderCode);
 
-
-
         mProgram = GLES20.glCreateProgram();
         GLES20.glAttachShader(mProgram, vertexShader);
         GLES20.glAttachShader(mProgram, fragmentShader);
@@ -195,12 +183,26 @@ public class GLSingleCube {//单个的正方体，27个组成一个魔方
         }
     }
 
+    boolean inited=false;
+
+    public void InitDraw(){
+        if(!inited){
+            inited=true;
+            mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
+            mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
+            xMatrixHandle=GLES20.glGetUniformLocation(mProgram,"xMatrix");
+            yMatrixHandle=GLES20.glGetUniformLocation(mProgram,"yMatrix");
+            xLRMatrixHandle=GLES20.glGetUniformLocation(mProgram,"xLRMatrix");
+            yLRMatrixHandle=GLES20.glGetUniformLocation(mProgram,"yLRMatrix");
+            zLRMatrixHandle=GLES20.glGetUniformLocation(mProgram,"zLRMatrix");
+            mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
+        }
+    }
 
     public void draw(float [] mvpMatrixin) {
+        InitDraw();
         float[] mvpMatrix=mvpMatrixin.clone();
-        //Matrix.translateM(mvpMatrix, 0, x_translate, y_translate, z_translate);
         GLES20.glUseProgram(mProgram);
-        mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
 
         GLES20.glEnableVertexAttribArray(mPositionHandle);
 
@@ -208,28 +210,23 @@ public class GLSingleCube {//单个的正方体，27个组成一个魔方
                 GLES20.GL_FLOAT, false,
                 vertexStride, vertexBuffer);
 
-        mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
+
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
 
-        xMatrixHandle=GLES20.glGetUniformLocation(mProgram,"xMatrix");
-        yMatrixHandle=GLES20.glGetUniformLocation(mProgram,"yMatrix");
         GLES20.glUniformMatrix4fv(xMatrixHandle,1,false,xMatrixes,0);
         GLES20.glUniformMatrix4fv(yMatrixHandle,1,false,yMatrixes,0);
 
-        xLRMatrixHandle=GLES20.glGetUniformLocation(mProgram,"xLRMatrix");
         GLES20.glUniformMatrix4fv(xLRMatrixHandle,1,false,xLRMatrixes,0);
-        yLRMatrixHandle=GLES20.glGetUniformLocation(mProgram,"yLRMatrix");
         GLES20.glUniformMatrix4fv(yLRMatrixHandle,1,false,yLRMatrixes,0);
-        zLRMatrixHandle=GLES20.glGetUniformLocation(mProgram,"zLRMatrix");
         GLES20.glUniformMatrix4fv(zLRMatrixHandle,1,false,zLRMatrixes,0);
-
-        mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
 
 
         for (int i = 0; i <6; i++) {
             GLES20.glUniform4fv(mColorHandle, 1, ColorArray[i], 0);
 
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLES, i*vertexCount/6, 6);
+            int i1=i*vertexCount/6;
+
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLES, i1, 6);
         }
 
         GLES20.glDisableVertexAttribArray(mPositionHandle);
@@ -265,6 +262,5 @@ public class GLSingleCube {//单个的正方体，27个组成一个魔方
             }
         }
     }
-
 }
 

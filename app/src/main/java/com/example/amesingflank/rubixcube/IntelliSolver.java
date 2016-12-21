@@ -25,8 +25,8 @@ public class IntelliSolver implements Serializable ,Cloneable{
 
     public int yellowRepresentative=color.yellow;
     public int whiteRepresentative=color.white;
-    Cube Jcube;
-    public IntelliSolver(Cube Jin){
+    JavaCube Jcube;
+    public IntelliSolver(JavaCube Jin){
         Jcube=Jin;
         //setColor();
     }
@@ -43,7 +43,7 @@ public class IntelliSolver implements Serializable ,Cloneable{
         int minH=heuristic(start.Jcube);
 
         LinkedList<Node> Open = new LinkedList<Node>();
-        HashSet<Node> Close = new HashSet<Node>();
+        HashSet<Node> Close = new HashSet<>();
         HashSet<Node> Open2 = new HashSet<Node>();
 
         Open.addFirst(start);
@@ -158,18 +158,18 @@ public class IntelliSolver implements Serializable ,Cloneable{
         return Solution;
     }
 
-    public static int heuristic(Cube cin){
+    public static int heuristic(JavaCube cin){
         return heuristic1(cin);
     }
 
-    public static int heuristic1(Cube cin){
+    public static int heuristic1(JavaCube cin){
         int[] faces=new int[6];
-        faces[frontFace]=cin.layers[Xaxis][1].rows[0].cells[1].c.color;
-        faces[backFace]=cin.layers[Xaxis][1].rows[2].cells[1].c.color;
-        faces[leftFace]=cin.layers[Yaxis][1].rows[0].cells[1].c.color;
-        faces[rightFace]=cin.layers[Yaxis][1].rows[2].cells[1].c.color;
-        faces[downFace]=cin.layers[Zaxis][1].rows[0].cells[1].c.color;
-        faces[upFace]=cin.layers[Zaxis][1].rows[2].cells[1].c.color;
+        faces[frontFace]=cin.singleCubes[1][1][0].ColorArray[0];
+        faces[backFace]=cin.singleCubes[1][1][2].ColorArray[1];
+        faces[leftFace]=cin.singleCubes[0][1][1].ColorArray[2];
+        faces[rightFace]=cin.singleCubes[2][1][1].ColorArray[3];
+        faces[downFace]=cin.singleCubes[1][0][1].ColorArray[4];
+        faces[upFace]=cin.singleCubes[1][2][1].ColorArray[5];
         int[] colors=new int[6 ];
         for (int c = 0; c < 6; c++) {
             for (int f = 0; f < 6; f++) {
@@ -181,114 +181,36 @@ public class IntelliSolver implements Serializable ,Cloneable{
 
         int sum=0;
 
-        int[][] edges=new int[3][4];
-        for (int a = 0; a < 3; a++) {
-            int[][] s=new int[4][3];
-            for (int i = 0; i <4 ; i++) {
-                s[i]=getLocation(a,1,i,0);
-            }
-            int[][] d=new int[4][3];
-            d[0]=getDestLocation(new int[]{cin.layers[a][1].rows[0].cells[0].c.color,cin.layers[a][1].rows[3].cells[2].c.color},colors);
-            for (int i = 1; i <4 ; i++) {
-                d[i]=getDestLocation(new int[]{cin.layers[a][1].rows[i].cells[0].c.color,cin.layers[a][1].rows[i-1].cells[2].c.color},colors);
-            }
-
-            sum+=getPhysicalDistance(s[0],d[0]);
-            if(getPhysicalDistance(s[0],s[1])!=getPhysicalDistance(d[0],d[1])){
-                sum+=getPhysicalDistance(s[1],d[1]);
-                if(getPhysicalDistance(s[2],s[1])!=getPhysicalDistance(d[2],d[1])){
-                        sum+=getPhysicalDistance(s[2],d[2]);
-                    if(getPhysicalDistance(s[2],s[3])!=getPhysicalDistance(d[2],d[3])){
-                        sum+=getPhysicalDistance(s[3],d[3]);
-                    }
-                }
-                else {
-                    if(getPhysicalDistance(s[3],s[1])!=getPhysicalDistance(d[3],d[1])){
-                        sum+=getPhysicalDistance(s[3],d[3]);
-                    }
+        for (int x = 0; x <3 ; x++) {
+            for (int y = 0; y < 3; y++) {
+                for (int z = 0; z < 3; z++) {
+                    sum+=getPhysicalDistance(new int[]{x,y,z},getDestLocation(cin.singleCubes[x][y][z],colors));
                 }
             }
-            else {
-                if(getPhysicalDistance(s[2],s[0])!=getPhysicalDistance(d[2],d[0])){
-                    sum+=getPhysicalDistance(s[2],d[2]);
-                    if(getPhysicalDistance(s[2],s[3])!=getPhysicalDistance(d[2],d[3])){
-                        sum+=getPhysicalDistance(s[3],d[3]);
-                    }
-                }
-                else {
-                    if(getPhysicalDistance(s[3],s[0])!=getPhysicalDistance(d[3],d[0])){
-                        sum+=getPhysicalDistance(s[3],d[3]);
-                    }
-                }
-            }
-
-           /* edges[a][0]=getPhysicalDistance(getLocation(a,1,0,0),
-                    getDestLocation(new int[]{cin.layers[a][1].rows[0].cells[0].c.color,cin.layers[a][1].rows[3].cells[2].c.color},colors));
-            edges[a][1]=getPhysicalDistance(getLocation(a,1,1,0),
-                    getDestLocation(new int[]{cin.layers[a][1].rows[1].cells[0].c.color,cin.layers[a][1].rows[0].cells[2].c.color},colors));
-            edges[a][2]=getPhysicalDistance(getLocation(a,1,2,0),
-                    getDestLocation(new int[]{cin.layers[a][1].rows[2].cells[0].c.color,cin.layers[a][1].rows[1].cells[2].c.color},colors));
-            edges[a][3]=getPhysicalDistance(getLocation(a,1,3,0),
-                    getDestLocation(new int[]{cin.layers[a][1].rows[3].cells[0].c.color,cin.layers[a][1].rows[2].cells[2].c.color},colors));
-                    */
-        }
-
-        int[] cornors=new int[8];
-
-        cornors[0]=getPhysicalDistance(getLocation(Xaxis,0,0,0),
-                getDestLocation(new int[]{cin.layers[Xaxis][0].rows[0].cells[0].c.color,cin.layers[Xaxis][0].rows[3].cells[2].c.color,cin.layers[Zaxis][0].rows[0].cells[0].c.color},colors));
-        cornors[1]=getPhysicalDistance(getLocation(Xaxis,0,1,0),
-                getDestLocation(new int[]{cin.layers[Xaxis][0].rows[1].cells[0].c.color,cin.layers[Xaxis][0].rows[0].cells[2].c.color,cin.layers[Zaxis][2].rows[0].cells[0].c.color},colors));
-        cornors[2]=getPhysicalDistance(getLocation(Xaxis,0,2,0),
-                getDestLocation(new int[]{cin.layers[Xaxis][0].rows[2].cells[0].c.color,cin.layers[Xaxis][0].rows[1].cells[2].c.color,cin.layers[Zaxis][2].rows[0].cells[2].c.color},colors));
-        cornors[3]=getPhysicalDistance(getLocation(Xaxis,0,3,0),
-                getDestLocation(new int[]{cin.layers[Xaxis][0].rows[3].cells[0].c.color,cin.layers[Xaxis][0].rows[2].cells[2].c.color,cin.layers[Zaxis][0].rows[0].cells[2].c.color},colors));
-
-        cornors[4]=getPhysicalDistance(getLocation(Xaxis,2,0,0),
-                getDestLocation(new int[]{cin.layers[Xaxis][2].rows[0].cells[0].c.color,cin.layers[Xaxis][2].rows[3].cells[2].c.color,cin.layers[Zaxis][0].rows[2].cells[2].c.color},colors));
-        cornors[5]=getPhysicalDistance(getLocation(Xaxis,2,1,0),
-                getDestLocation(new int[]{cin.layers[Xaxis][2].rows[1].cells[0].c.color,cin.layers[Xaxis][2].rows[0].cells[2].c.color,cin.layers[Zaxis][2].rows[2].cells[2].c.color},colors));
-        cornors[6]=getPhysicalDistance(getLocation(Xaxis,2,2,0),
-                getDestLocation(new int[]{cin.layers[Xaxis][2].rows[2].cells[0].c.color,cin.layers[Xaxis][2].rows[1].cells[2].c.color,cin.layers[Zaxis][2].rows[2].cells[0].c.color},colors));
-        cornors[7]=getPhysicalDistance(getLocation(Xaxis,2,3,0),
-                getDestLocation(new int[]{cin.layers[Xaxis][2].rows[3].cells[0].c.color,cin.layers[Xaxis][2].rows[2].cells[2].c.color,cin.layers[Zaxis][0].rows[2].cells[0].c.color},colors));
-
-
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                if(edges[i][j]==edges[i][j+1]){
-                    edges[i][j]=0;
-                }
-            }
-        }
-        for (int i = 0; i <3 ; i++) {
-            for (int j = 0; j <4 ; j++) {
-                sum+=edges[i][j];
-            }
-        }
-        for (int i = 0; i < 8; i++) {
-            sum+=cornors[i];
         }
         return sum;
     }
 
-    public static int[] getDestLocation(int[] c,int[] colors){
-        int length =c.length;
-        int[] faces =new int[length];
-        for (int i = 0; i < length; i++) {
-            faces[i]=colors[c[i]];
+    public static int[] getDestLocation(JavaSingleCube c,int[] colors){
+
+        LinkedList<Integer> faces =new LinkedList<>();
+        for (int i = 0; i < 6; i++) {
+            if(c.ColorArray[i]!=JavaSingleCube.blank){
+                faces.add(c.ColorArray[i]);
+            }
         }
+
         return getLocationbyFace(faces);
     }
 
-    public static int[] getLocationbyFace(int[] faces){
+    public static int[] getLocationbyFace(LinkedList<Integer> faces){
         int x,y,z;
         x=1;
         y=1;
         z=1;
-        int length=faces.length;
+        int length=faces.size();
         for (int i = 0; i <length; i++) {
-            switch (faces[i]){
+            switch (faces.get(i)){
                 case 0:
                     z=0;
                     break;
@@ -313,78 +235,6 @@ public class IntelliSolver implements Serializable ,Cloneable{
         return new int[]{x,y,z};
     }
 
-    public static int[] getLocation(int a,int l, int r, int c){
-        int x,y,z;
-        x=1;
-        y=1;
-        z=1;
-        switch (a){
-            case Xaxis:
-                y=l;
-                switch (r){
-                    case 0:
-                        z=0;
-                        x=c;
-                        break;
-                    case 1:
-                        x=2;
-                        z=c;
-                        break;
-                    case 2:
-                        z=2;
-                        x=2-c;
-                        break;
-                    case 3:
-                        x=0;
-                        z=2-c;
-                        break;
-                }
-                break;
-            case Yaxis:
-                z=l;
-                switch (r){
-                    case 0:
-                        x=0;
-                        y=c;
-                        break;
-                    case 1:
-                        y=2;
-                        x=c;
-                        break;
-                    case 2:
-                        x=2;
-                        y=2-c;
-                        break;
-                    case 3:
-                        y=0;
-                        x=2-c;
-                        break;
-                }
-                break;
-            case Zaxis:
-                x=l;
-                switch (r){
-                    case 0:
-                        y=0;
-                        z=c;
-                        break;
-                    case 1:
-                        z=2;
-                        y=c;
-                        break;
-                    case 2:
-                        y=2;
-                        z=2-c;
-                        break;
-                    case 3:
-                        z=0;
-                        y=2-c;
-                        break;
-                }
-                break;
-        }
-        return new int[]{x,y,z};
-    }
 
     public static int getPhysicalDistance(int[] loc0,int[] loc1){
         int sum=0;

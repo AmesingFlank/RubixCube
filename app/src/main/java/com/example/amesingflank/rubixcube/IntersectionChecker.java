@@ -69,7 +69,6 @@ public class IntersectionChecker {
             return new float[]{0,0,0};
         }
 
-
         //The ray intersects the triangle!
 
         float[] ans=new float[]{1f,triangleU,triangleV};

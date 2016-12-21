@@ -14,6 +14,10 @@ public class RoutineSolver implements Serializable,Cloneable{
 
     public LinkedList<Move> getSolution(){
         LinkedList<Move> Solution=new LinkedList<Move>();
+        if(!valid()){
+            Solution.addLast(new Move(new int[]{555,555,555},"Faulty Cube"));
+            return Solution;
+        }
         Move step=nextMove();
         while (step.action[0]!=999 && step.action[0]!=4){
             Log.w(String.valueOf("        " + step.action[0]) + "   " + String.valueOf(step.action[1]) + "   " + String.valueOf(step.action[2]) + "   ", step.message);
@@ -27,9 +31,15 @@ public class RoutineSolver implements Serializable,Cloneable{
                 }
             }
             step=nextMove();
+            if(Solution.size()>450){
+                Solution.addLast(new Move(new int[]{555,555,555},"Faulty Cube"));
+                return Solution;
+
+            }
         }
         return Solution;
     }
+
 
     public final int Xaxis = 0;
     public final int Yaxis = 1;
@@ -799,10 +809,30 @@ public class RoutineSolver implements Serializable,Cloneable{
 
     }
 
-    public Solver clone(){
-        Solver clone=null;
+    public boolean valid(){
+        int[] colors=new int[7];
+        for (int i = 0; i <3 ; i++) {
+            for (int j = 0; j <3 ; j++) {
+                colors[Jcube.singleCubes[i][j][0].ColorArray[0]]++;
+                colors[Jcube.singleCubes[i][j][2].ColorArray[1]]++;
+                colors[Jcube.singleCubes[0][j][i].ColorArray[2]]++;
+                colors[Jcube.singleCubes[2][j][i].ColorArray[3]]++;
+                colors[Jcube.singleCubes[i][0][j].ColorArray[4]]++;
+                colors[Jcube.singleCubes[i][2][j].ColorArray[5]]++;
+            }
+        }
+        for (int i = 0; i < 6; i++) {
+            if(colors[i]!=9){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public RoutineSolver clone(){
+        RoutineSolver clone=null;
         try {
-            clone=(Solver)super.clone();
+            clone=(RoutineSolver)super.clone();
         }
         catch (CloneNotSupportedException e){
             e.printStackTrace();

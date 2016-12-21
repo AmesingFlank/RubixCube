@@ -78,11 +78,6 @@ public class Cube implements Serializable,Cloneable{
         return ots.getSolution();
     }
 
-    public LinkedList<Move> getIntelliSolution(){
-        Cube temp=clone();
-        IntelliSolver is=new IntelliSolver(temp );
-        return is.getSolution2();
-    }
 
 
     @Override

@@ -1,11 +1,7 @@
 package com.example.amesingflank.rubixcube;
 
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Typeface;
 import android.opengl.GLES20;
+import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
 import android.opengl.GLUtils;
@@ -20,7 +16,8 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 /**
- * Created by lbj on 2015/11/24.
+ * Created by Frank Lu Dun Fan  on 2015/11/24.
+ * RDFZ ICC S2C1 卢敦凡 All rights reserved.
  */
 public class GLrenderer implements GLSurfaceView.Renderer{
     // Context myc;
@@ -45,19 +42,22 @@ public class GLrenderer implements GLSurfaceView.Renderer{
     public float[] mViewMatrix = new float[16];
 
 
-
-
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
         // Set the background frame color
         glrc=new GLRubikCube();
 
+
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         GLES20.glDepthFunc(GLES20.GL_LESS);
+        String s=GLES20.glGetString(GLES20.GL_VENDOR);
+        s+="";
 
 
     }
     public float RotationSpeedCoefficient=0.15f;
+
+
 
     public void onDrawFrame(GL10 unused) {
 
@@ -95,8 +95,6 @@ public class GLrenderer implements GLSurfaceView.Renderer{
                 timeflag=false;
             }
         }
-
-
     }
     public  boolean isRotating=false;
     public long time0;
@@ -163,10 +161,10 @@ public class GLrenderer implements GLSurfaceView.Renderer{
         }
     }
     public void getIntelliSolution(){
-       // Solution=glrc.Jcube.getIntelliSolution();
-        //if (Solution.size()!=0){
-          //  hasSolution=true;
-        //}
+        Solution=glrc.Jcube.getIntelliSolution();
+        if (Solution.size()!=0){
+            hasSolution=true;
+        }
     }
     StepsShower ss;
     public void setStpesShower(StepsShower sin){
@@ -177,6 +175,7 @@ public class GLrenderer implements GLSurfaceView.Renderer{
 
     public final float initialAngle=30;
     public boolean firstdrawflag=false;
+
     public float xangle=initialAngle;
     public float yangle=initialAngle;
 
@@ -417,9 +416,14 @@ public class GLrenderer implements GLSurfaceView.Renderer{
 
         Matrix.frustumM(mProjectionMatrix, 0, ratio, -ratio, -1, 1, 3, 10);
 
+       // mProjectionMatrix=new float[]{1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
+
         Matrix.setLookAtM(mViewMatrix, 0, 0, 0, -6.0f, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
 
+
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
+
+
 
     }
     public static int loadShader(int type, String shaderCode){
@@ -450,6 +454,7 @@ public class GLrenderer implements GLSurfaceView.Renderer{
         tobeSynced=jin.clone();
         need2Sync=true;
     }
+
     boolean need2Sync=true;
 
 }
