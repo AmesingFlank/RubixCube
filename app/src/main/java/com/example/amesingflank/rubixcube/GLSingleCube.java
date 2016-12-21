@@ -135,7 +135,7 @@ public class GLSingleCube {//单个的正方体，27个组成一个魔方
     public GLSingleCube(float[][] cin,int x,int y,int z ) {
         setTranslation(x,y,z);
         ColorArray=cin;
-
+        // test
         ByteBuffer bb = ByteBuffer.allocateDirect(
                 squareCoords.length * 4);
         bb.order(ByteOrder.nativeOrder());
