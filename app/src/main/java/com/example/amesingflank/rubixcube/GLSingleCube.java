@@ -201,6 +201,7 @@ public class GLSingleCube {//单个的正方体，27个组成一个魔方
 
     public void draw(float [] mvpMatrixin) {
         InitDraw();
+        // Commit Proof
         float[] mvpMatrix=mvpMatrixin.clone();
         GLES20.glUseProgram(mProgram);
 
