@@ -2,14 +2,18 @@
 
 A 3D Rubik's Cube App on Android implemented by OpenGL ES 2.0
 
+A shameful comment: 
+This is a project that I made in my very early days as a rookie programmer, therefore it does NOT serve as good reference of my current coding style and abilities !!!!!!!!!!!!!!!!!!!!!!!!!! T_T
+
+
+
 Features:
 * It's in 3D...
 * Display a solution of the Cube using Fridrich (CFOP) algorithm
 * The scan function : use the phone's camera to scan a real-world Rubik's Cube into the app.
 
 Known Bugs:
-Possible outofmemory error when using the scanning function due to unoptimized (is that a word?) handling of Bitmaps.
-Will fix soon.
+Possible outofmemory error when using the scanning function due to unoptimized handling of Bitmaps.
 
 
 #Screenshots
